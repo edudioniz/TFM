@@ -63,7 +63,7 @@ public class TrustedX{
     private String getTokenUrl = "https://uoc.safelayer.com:8082/trustedx-authserver/oauth/main/token";
     private String IDENTITIES_URL= "https://uoc.safelayer.com:8082/trustedx-resources/esigp/v1/sign_identities";
     
-    private String SIGN_ALG= "rsa-sha512";
+    private String SIGN_ALG= "rsa-sha256";
     
     private CloseableHttpClient client;
     
@@ -121,9 +121,9 @@ public class TrustedX{
     
     private static String getBinaryFromStream(InputStream is) {
         try{
-            MessageDigest sha1 = MessageDigest.getInstance("SHA-512");
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-256");
             ByteBuffer buff = new ByteBuffer();
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[4096];
             int len = is.read(buffer);
 
             while (len != -1) {

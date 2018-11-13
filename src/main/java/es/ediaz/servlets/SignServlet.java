@@ -83,6 +83,11 @@ public class SignServlet extends HttpServlet {
                 
                 iText itext = new iText();
                 jsonResp = sign.sign(itext.getHashFromPre(filename), identity, tokensign, filename);
+                
+                System.out.println("-------");
+                System.out.println(jsonResp);
+                System.out.println("-------");
+                
                 resp = (HashMap<Object, Object>) JSON.parse(jsonResp);
                 
                 if(resp.get("ccd").equals("200")){

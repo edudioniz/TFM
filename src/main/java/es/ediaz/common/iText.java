@@ -32,6 +32,7 @@ import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,36 +78,33 @@ public class iText {
 
                 // appearance 
                 PdfSignatureAppearance appearance = stamper.getSignatureAppearance(); 
-                appearance.setReason("External hash example"); 
-                appearance.setLocation("Foobar"); 
-                appearance.setVisibleSignature(new Rectangle(72, 732, 144, 780), 1, "sig"); 
+                appearance.setReason("CloudDocs Sign Platform"); 
+                appearance.setLocation("Firmado electrónicamente con TrustedX"); 
+                appearance.setVisibleSignature(new Rectangle(36, 748, 144, 780), 1, "sig"); 
 
                 ExternalSignature es = new Signature(Base64.getDecoder().decode(binary)); 
                 
                 KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
                 ks.load(new FileInputStream(KEYSTORE), PASSWORD.toCharArray());
                 
-                // This class retrieves the most-trusted CAs from the keystore
-                PKIXParameters params = new PKIXParameters(ks);
-
-                // Get the set of trust anchors, which contain the most-trusted CA certificates
+                /*PKIXParameters params = new PKIXParameters(ks);
                 Iterator it = params.getTrustAnchors().iterator();
                 while( it.hasNext() ) {
                     TrustAnchor ta = (TrustAnchor)it.next();
                     // Get certificate
                     X509Certificate cert = ta.getTrustedCert();
                     System.out.println(cert);
-                }
+                }*/
                 
                 String alias = (String)ks.aliases().nextElement();
                 System.out.println(alias+" certificado");
-                System.out.println(alias+" certificado");
-                System.out.println(alias+" certificado");
-                
                 Certificate cert = ks.getCertificate(alias);
                 
+                String alias2 = (String)ks.aliases().nextElement();
+                System.out.println(alias2+" certificado");
+                Certificate cert2 = ks.getCertificate(alias2);
                 
-                MakeSignature.signDetached(appearance, new BouncyCastleDigest(), es, new Certificate []{cert}, null, null, null, 0, CryptoStandard.CMS); 
+                MakeSignature.signDetached(appearance, new BouncyCastleDigest(), es, new Certificate []{cert, cert2}, null, null, null, 0, CryptoStandard.CMS); 
                 
             }else{
                 ret = namefile+".pem";
@@ -131,8 +129,8 @@ public class iText {
         try{
             String file = ROUTE_TEMP+route;
             InputStream input = new FileInputStream(new File(file));
-            MessageDigest sha1 = MessageDigest.getInstance("SHA-512");
-            byte[] buffer = new byte[8192];
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[4096];
             int len = input.read(buffer);
 
             while (len != -1) {
