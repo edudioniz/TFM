@@ -98,17 +98,15 @@ public class iText {
                     System.out.println(cert);
                 }
                 
-                
                 String alias = (String)ks.aliases().nextElement();
-                PrivateKey pk = (PrivateKey) ks.getKey(alias, PASSWORD.toCharArray());
-                Certificate[] chain = ks.getCertificateChain(alias);
+                System.out.println(alias+" certificado");
+                System.out.println(alias+" certificado");
+                System.out.println(alias+" certificado");
                 
-                System.out.println("------AQUI NO VA-------");
-                System.out.println(chain.length);
-                System.out.println(chain[0].getPublicKey());
-                System.out.println("-------------");
+                Certificate cert = ks.getCertificate(alias);
                 
-                MakeSignature.signDetached(appearance, new BouncyCastleDigest(), es, chain, null, null, null, 0, CryptoStandard.CMS); 
+                
+                MakeSignature.signDetached(appearance, new BouncyCastleDigest(), es, new Certificate []{cert}, null, null, null, 0, CryptoStandard.CMS); 
                 
             }else{
                 ret = namefile+".pem";
