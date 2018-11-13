@@ -264,7 +264,8 @@ public class DropboxFileServlet extends HttpServlet {
             }
             path = DbxPathV2.getParent(path) + "/" + metadata.getName();
             if (metadata instanceof FolderMetadata) {
-                
+                System.out.println("Intentando subir "+file+" en "+path);
+                System.out.flush();
                 String data = uploadFile(client, new File(file), path);
                 JSONObject r = new JSONObject();
                 r.append("ccd", 200);
@@ -285,11 +286,12 @@ public class DropboxFileServlet extends HttpServlet {
         String jsonResp = "";
         try{
             InputStream in = new FileInputStream(localFile);
+            System.out.println("Ejecuto ");
             FileMetadata metadata = dbxClient.files().uploadBuilder(dropboxPath)
                 .withMode(WriteMode.ADD)
                 .withClientModified(new Date(localFile.lastModified()))
                 .uploadAndFinish(in);
-
+            System.out.println(metadata.toStringMultiline());
             JSONObject r = new JSONObject();
                 r.append("ccd", 200);
                 r.append("msj", "OK");
