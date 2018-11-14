@@ -54,7 +54,10 @@ public class SignServlet extends HttpServlet {
             if(action != null && action.length()>0 && action.equals("list")){
                 jsonResp = sign.getIdentities(token);
             }else if(action != null && action.length()>0 && action.equals("add")){
-                jsonResp = "{add}";
+                String pkcs12 = request.getParameter("pkcs12");
+                String labels = request.getParameter("labels");
+                String password = request.getParameter("password");
+                jsonResp = sign.addIdentity(token,pkcs12,labels, password);
             }else if(action != null && action.length()>0 && action.equals("del")){
                 String id = request.getParameter("id");
                 jsonResp = sign.deleteIdentity(token, id);

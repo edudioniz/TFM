@@ -38,6 +38,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContexts;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mortbay.util.ajax.JSON;
 
 /**
  *
@@ -62,6 +63,7 @@ public class TrustedX{
     
     private String getTokenUrl = "https://uoc.safelayer.com:8082/trustedx-authserver/oauth/main/token";
     private String IDENTITIES_URL= "https://uoc.safelayer.com:8082/trustedx-resources/esigp/v1/sign_identities";
+    private String ADD_IDENTITIES_URL= "https://uoc.safelayer.com:8082/trustedx-resources/esigp/v1/sign_identities/server/pki_x509/pkcs12";
     
     private String SIGN_ALG= "rsa-sha256";
     
@@ -234,11 +236,56 @@ public class TrustedX{
         return jsonresponse;
     }
     
-    public String addIdentity(String token, String id) {
+    public String addIdentity(String token, String pkcs12, String labels, String password) {
+        CloseableHttpResponse response = null;
+        String jsonresponse = "{}";
+        try {
+            HttpPost httppost = new HttpPost(ADD_IDENTITIES_URL);
+            //httppost.addHeader("Authorization","Basic Y2xvdWRkb2NzOmRlbW9kZW1v");
+            httppost.addHeader("Content-Type","application/json");
+            httppost.addHeader("Authorization","Bearer "+token);
+            
+            JSONObject tmp = new JSONObject();
+            tmp.put("labels", JSON.parse(labels));
+            tmp.put("pkcs12", pkcs12);
+            tmp.put("password", password);
+            
+            System.out.println("-----------");
+            System.out.println(JSON.parse(labels).toString());
+            System.out.println(pkcs12);
+            System.out.println(password);
+            System.out.println("-------------");
+            System.out.flush();
+            
+            httppost.setEntity(new StringEntity(tmp.toString()));
+            response = this.client.execute(httppost);
+            
+            if(response.getStatusLine().getStatusCode() == 201){
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "200");
+                obj.put("msj", "OK");
+                
+                jsonresponse = obj.toString();
+            }else if(response.getStatusLine().getStatusCode() == 400){
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "400");
+                obj.put("msj", "ERR");
+                
+                jsonresponse = obj.toString();
+            }else{
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "999");
+                obj.put("msj", "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+convertStreamToString(response.getEntity().getContent())+"'}");
+                
+                jsonresponse = obj.toString();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return jsonresponse;
         
-        //{ "labels" : [ "uoc", "student" ],"pkcs12" : "MIIYggIBAzCCGEAGCSqG....
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
     }
     
     public String sign(String hash, String identity, String token, String filename){
@@ -292,7 +339,12 @@ public class TrustedX{
                 tmp.put("id", ((JSONObject) o).get("id").toString());
                 tmp.put("type", ((JSONObject) o).get("type").toString());
                 tmp.put("description", ((JSONObject) o).get("description").toString());
-                tmp.put("labels", ((JSONObject) o).get("labels").toString());
+                String labelstmp = ((JSONObject) o).get("labels").toString();
+                Object labelsobj = JSON.parse(labelstmp);
+                System.out.println("---x---");
+                System.out.println(JSON.toString(labelsobj));
+                System.out.println("---x---");
+                tmp.put("labels", new String[]{ } );
                 itemsOutput.put(tmp);
             }
         }
