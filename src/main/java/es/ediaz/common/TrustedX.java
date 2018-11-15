@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
@@ -66,6 +67,8 @@ public class TrustedX{
     private String ADD_IDENTITIES_URL= "https://uoc.safelayer.com:8082/trustedx-resources/esigp/v1/sign_identities/server/pki_x509/pkcs12";
     
     private String SIGN_ALG= "rsa-sha256";
+    
+    public static final String DESCRIPTOR_UOC_STUDENT = "Estudiante de la UOC";
     
     private CloseableHttpClient client;
     
@@ -228,7 +231,25 @@ public class TrustedX{
             http.addHeader("Authorization","Bearer "+token);
             
             response = this.client.execute(http);
-            jsonresponse = convertStreamToString(response.getEntity().getContent());
+            if(response.getStatusLine().getStatusCode() == 200){
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "200");
+                obj.put("msj", "OK");
+                
+                jsonresponse = obj.toString();
+            }else if(response.getStatusLine().getStatusCode() == 400){
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "400");
+                obj.put("msj", "ERR");
+                
+                jsonresponse = obj.toString();
+            }else{
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "999");
+                obj.put("msj", "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+convertStreamToString(response.getEntity().getContent())+"'}");
+                
+                jsonresponse = obj.toString();
+            }   
             
         } catch (IOException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
@@ -241,7 +262,6 @@ public class TrustedX{
         String jsonresponse = "{}";
         try {
             HttpPost httppost = new HttpPost(ADD_IDENTITIES_URL);
-            //httppost.addHeader("Authorization","Basic Y2xvdWRkb2NzOmRlbW9kZW1v");
             httppost.addHeader("Content-Type","application/json");
             httppost.addHeader("Authorization","Bearer "+token);
             
@@ -249,13 +269,6 @@ public class TrustedX{
             tmp.put("labels", JSON.parse(labels));
             tmp.put("pkcs12", pkcs12);
             tmp.put("password", password);
-            
-            System.out.println("-----------");
-            System.out.println(JSON.parse(labels).toString());
-            System.out.println(pkcs12);
-            System.out.println(password);
-            System.out.println("-------------");
-            System.out.flush();
             
             httppost.setEntity(new StringEntity(tmp.toString()));
             response = this.client.execute(httppost);
@@ -338,13 +351,28 @@ public class TrustedX{
                 JSONObject tmp = new JSONObject();
                 tmp.put("id", ((JSONObject) o).get("id").toString());
                 tmp.put("type", ((JSONObject) o).get("type").toString());
-                tmp.put("description", ((JSONObject) o).get("description").toString());
-                String labelstmp = ((JSONObject) o).get("labels").toString();
-                Object labelsobj = JSON.parse(labelstmp);
-                System.out.println("---x---");
-                System.out.println(JSON.toString(labelsobj));
-                System.out.println("---x---");
-                tmp.put("labels", new String[]{ } );
+                JSONArray labels = (JSONArray) ((JSONObject) o).get("labels");
+                tmp.put("labels", new String[]{labels.get(2).toString(), labels.get(0).toString()} );
+                
+                String default_name = "Certificado";
+                try {
+                    Class<String> types = String.class;
+                    Field value = TrustedX.class.getField(
+                            "DESCRIPTOR_"+labels.get(2).toString().toUpperCase()+"_"+labels.get(0).toString().toUpperCase()
+                    );
+                    default_name = value.get(new String()).toString();
+                    
+                } catch (NoSuchFieldException ex) {
+                    Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (SecurityException ex) {
+                    Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IllegalArgumentException ex) {
+                    Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IllegalAccessException ex) {
+                    Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                tmp.put("description", default_name);
                 itemsOutput.put(tmp);
             }
         }

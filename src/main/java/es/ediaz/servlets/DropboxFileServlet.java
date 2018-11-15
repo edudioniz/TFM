@@ -284,19 +284,23 @@ public class DropboxFileServlet extends HttpServlet {
 
     private static String uploadFile(DbxClientV2 dbxClient, File localFile, String dropboxPath) {
         String jsonResp = "";
-        try{
-            InputStream in = new FileInputStream(localFile);
-            System.out.println("Ejecuto ");
-            FileMetadata metadata = dbxClient.files().uploadBuilder(dropboxPath)
-                .withMode(WriteMode.ADD)
-                .withClientModified(new Date(localFile.lastModified()))
-                .uploadAndFinish(in);
-            System.out.println(metadata.toStringMultiline());
-            JSONObject r = new JSONObject();
+        try {
+            if (localFile.exists()) {
+                String remoteFileName = localFile.getName();
+                InputStream inputStream;
+                inputStream = new FileInputStream(localFile);
+                Metadata metadata = dbxClient.files().uploadBuilder(dropboxPath).withMode(WriteMode.OVERWRITE).uploadAndFinish(inputStream);
+                JSONObject r = new JSONObject();
                 r.append("ccd", 200);
                 r.append("msj", "OK");
                 r.append("data", metadata.toStringMultiline());
                 jsonResp = r.toString();
+            }else{
+                JSONObject r = new JSONObject();
+                r.append("ccd", 400);
+                r.append("msj", "FILE NOT EXIST");
+                jsonResp = r.toString();
+            }  
         }catch (UploadErrorException ex) {
             System.err.println("Error uploading to Dropbox: " + ex.getMessage());
             System.exit(1);
@@ -309,7 +313,7 @@ public class DropboxFileServlet extends HttpServlet {
         }
         return jsonResp;
     }
-    //END ACTION UPLOAD
+    //END ACTION UPLOAD    //END ACTION UPLOAD    //END ACTION UPLOAD    //END ACTION UPLOAD
     
     //ARMONIZADOR INTERFAZ
     private static String getDropboxFiles(String input){

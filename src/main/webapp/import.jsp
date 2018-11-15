@@ -50,12 +50,12 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p class="lead"> Â¿EstÃ¡ seguro que desea enviar la peticiÃ³n a TrustedX para eliminar el certificado?</p>
-                        <p class="lead"> Este paso serÃ¡ irreversible, recuerde tener una copia de su certificado antes de borrarlo.</p>
+                        <p class="lead"> ¿Está seguro que desea enviar la petición a TrustedX para eliminar el certificado?</p>
+                        <p class="lead"> Este paso será irreversible, recuerde tener una copia de su certificado antes de borrarlo.</p>
                     </div>
                     <div class="modal-footer" id="modal_pdf_footer">
-                        <button type="button" id="modal_pdf_sign_btn" class="btn btn-default" data-document="9812763">No quiero eliminarlo</button>
-                        <button type="button" id="modal_pdf_sign_btn" class="btn btn-danger" data-document="9812763"><i class="fas fa-trash"></i> Si estoy seguro de que quiero elimiarlo</button>
+                        <button type="button" id="modal_pdf_sign_btn" class="btn btn-default" data-dismiss="modal">No quiero eliminarlo</button>
+                        <button type="button" id="modal_pdf_sign_btn" class="btn btn-danger" onclick="delete_cert()"><i class="fas fa-trash"></i> Si estoy seguro de que quiero elimiarlo</button>
                     </div>
                 </div>
             </div>

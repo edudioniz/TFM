@@ -1,4 +1,4 @@
-package es.ediaz.core;
+package es.ediaz.temporales;
 
 
 import com.google.api.client.auth.oauth2.Credential;

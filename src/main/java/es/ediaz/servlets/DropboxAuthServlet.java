@@ -50,18 +50,18 @@ public class DropboxAuthServlet extends HttpServlet {
                         getSessionStore(request),
                         request.getParameterMap()
                     );
-                    request.getSession().setAttribute("token", authFinish.getAccessToken());
+                    request.getSession(true).setAttribute("token", authFinish.getAccessToken());
 
                     //------ TODO Mejorar generación del hash, escribir un file temp 
-                    request.getSession().setAttribute("tmphash", UUID.randomUUID());
+                    request.getSession(true).setAttribute("tmphash", UUID.randomUUID());
                     //------ FIN
 
-                    request.getSession().setAttribute("store_servlet", "filedropbox");
+                    request.getSession(true).setAttribute("store_servlet", "filedropbox");
 
                     response.sendRedirect("/sign");
 
                 } catch (Exception e) {
-                    System.err.println(e.getStackTrace());
+                    System.err.println(e.getLocalizedMessage());
                     response.sendError(400);
                 }
             }else{

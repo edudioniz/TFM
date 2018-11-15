@@ -7,7 +7,6 @@ package es.ediaz.temporales;
  */
 
 
-import es.ediaz.core.GoogleAuth;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;

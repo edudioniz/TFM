@@ -26,8 +26,10 @@
     width: 380px; /* may not be necessary */
     margin: 0px auto;
 }
-
 .table-list-file{
+    cursor: default;
+}
+.table-list-file i{
     cursor: pointer;
 }
 .main {
