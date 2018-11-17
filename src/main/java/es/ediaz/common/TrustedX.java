@@ -17,9 +17,11 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +58,7 @@ public class TrustedX{
     String url = "uoc.safelayer.com";
     int port = 8082;
     
+    private String GET_CER_URL = "https://uoc.safelayer.com:8082/trustedx-resources/esigp/v1/sign_identities/";
     private String SIGN_HASH_URL = "https://uoc.safelayer.com:8082/trustedx-resources/esigp/v1/signatures/server/raw";
     private String CODE_TO_SIGN_URL = "https://uoc.safelayer.com:8082/trustedx-authserver/main/oauth?acr_values=urn:safelayer:tws:policies:authentication:flow:basic&redirect_uri="+returnUrl+"?a=signtoken&client_id=clouddocs&response_type=code&scope=urn:safelayer:eidas:sign:identity:use:server&sign_identity_id=";
     //%20urn:safelayer:eidas:sign:identity:use:server corte esto de getCodeUrl al final
@@ -103,7 +106,7 @@ public class TrustedX{
         }
     }
     
-    private static String convertStreamToString(InputStream is) {
+    private static String getStringFromStream(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
 
@@ -168,7 +171,7 @@ public class TrustedX{
             httppost.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
             
             response = this.client.execute(httppost);
-            jsonresponse = convertStreamToString(response.getEntity().getContent());
+            jsonresponse = getStringFromStream(response.getEntity().getContent());
             
         } catch (IOException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
@@ -193,7 +196,7 @@ public class TrustedX{
             httppost.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
             
             response = this.client.execute(httppost);
-            jsonresponse = convertStreamToString(response.getEntity().getContent());
+            jsonresponse = getStringFromStream(response.getEntity().getContent());
             
         } catch (IOException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
@@ -212,7 +215,7 @@ public class TrustedX{
             http.addHeader("Authorization","Bearer "+token);
             
             response = this.client.execute(http);
-            jsonresponse = TrustedX.listCertAZ(convertStreamToString(response.getEntity().getContent()));
+            jsonresponse = TrustedX.listCertAZ(getStringFromStream(response.getEntity().getContent()));
             
         } catch (IOException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
@@ -246,7 +249,7 @@ public class TrustedX{
             }else{
                 JSONObject obj = new JSONObject();
                 obj.put("ccd", "999");
-                obj.put("msj", "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+convertStreamToString(response.getEntity().getContent())+"'}");
+                obj.put("msj", "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+getStringFromStream(response.getEntity().getContent())+"'}");
                 
                 jsonresponse = obj.toString();
             }   
@@ -288,7 +291,7 @@ public class TrustedX{
             }else{
                 JSONObject obj = new JSONObject();
                 obj.put("ccd", "999");
-                obj.put("msj", "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+convertStreamToString(response.getEntity().getContent())+"'}");
+                obj.put("msj", "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+getStringFromStream(response.getEntity().getContent())+"'}");
                 
                 jsonresponse = obj.toString();
             }
@@ -301,16 +304,76 @@ public class TrustedX{
         
     }
     
-    public String sign(String hash, String identity, String token, String filename){
+    public String getCertificate(String identity, String token_nav){
         
         CloseableHttpResponse response = null;
+        String jsonresponse = "{}";
+        try {
+            
+            HttpGet httpCer = new HttpGet(GET_CER_URL+identity);
+            httpCer.addHeader("Content-Type","application/json");
+            httpCer.addHeader("Authorization","Bearer "+token_nav);
+            
+            response = this.client.execute(httpCer);
+            
+            if(response.getStatusLine().getStatusCode() == 200){
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", "200");
+                JSONObject cerjson = new JSONObject(getStringFromStream(response.getEntity().getContent()));
+                JSONObject identityjson = cerjson.getJSONObject("identity");
+                JSONObject detailsjson = identityjson.getJSONObject("details");
+                
+                obj.put("data", detailsjson.get("certificate"));
+                
+                jsonresponse = obj.toString();
+                
+            }else{
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", response.getStatusLine().getStatusCode());
+                obj.put("error", getStringFromStream(response.getEntity().getContent()));
+                jsonresponse = obj.toString();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return jsonresponse;
+    }
+    
+    public byte[] getCertificateByte(String identity, String token_nav){
+        
+        CloseableHttpResponse response = null;
+        byte[] output = null;
+        try {
+            
+            HttpGet httpCer = new HttpGet(GET_CER_URL+identity);
+            httpCer.addHeader("Content-Type","application/json");
+            httpCer.addHeader("Authorization","Bearer "+token_nav);
+            
+            response = this.client.execute(httpCer);
+            
+            JSONObject cerjson = new JSONObject(getStringFromStream(response.getEntity().getContent()));
+            JSONObject identityjson = cerjson.getJSONObject("identity");
+            JSONObject detailsjson = identityjson.getJSONObject("details");
+                
+            output = Base64.getDecoder().decode(detailsjson.get("certificate").toString());
+            
+        } catch (IOException ex) {
+            Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return output;
+    }
+    
+    
+    public String sign(String hash, String identity, String token_nav, String token_sign, String filename){
+        
+        /*CloseableHttpResponse response = null;
         String jsonresponse = "{}";
         try {
             
             HttpPost httppost = new HttpPost(SIGN_HASH_URL);
             httppost.addHeader("Authorization","Basic Y2xvdWRkb2NzOmRlbW9kZW1v");
             httppost.addHeader("Content-Type","application/json");
-            httppost.addHeader("Authorization","Bearer "+token);
+            httppost.addHeader("Authorization","Bearer "+token_sign);
             
             JSONObject tmp = new JSONObject();
             tmp.put("digest_value", hash);
@@ -321,6 +384,7 @@ public class TrustedX{
             response = this.client.execute(httppost);
             
             if(response.getStatusLine().getStatusCode() == 200){
+                
                 iText itext = new iText();
                 String data = itext.createPDF(filename, getBinaryFromStream(response.getEntity().getContent()));
                 
@@ -329,13 +393,18 @@ public class TrustedX{
                 obj.put("data", data);
                 
                 jsonresponse = obj.toString();
+                
             }else{
-                jsonresponse = "{ 'error': '"+response.getStatusLine().getStatusCode()+"', 'data': '"+convertStreamToString(response.getEntity().getContent())+"'}";
+                JSONObject obj = new JSONObject();
+                obj.put("ccd", response.getStatusLine().getStatusCode());
+                obj.put("error", getStringFromStream(response.getEntity().getContent()));
+                jsonresponse = obj.toString();
             }
         } catch (IOException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return jsonresponse;
+        return jsonresponse;*/
+        return "";
     }
     
     //ARMONIZADOR INTERFAZ
@@ -382,7 +451,5 @@ public class TrustedX{
         outputj.put("ccd", "200");
         return outputj.toString();
     }
-  
-    public static void main(String ... args) throws Exception{}
 
 }

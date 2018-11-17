@@ -15,6 +15,7 @@ import com.itextpdf.text.pdf.security.ExternalDigest;
 import com.itextpdf.text.pdf.security.ExternalSignature;
 import com.itextpdf.text.pdf.security.MakeSignature;
 import com.itextpdf.text.pdf.security.MakeSignature.CryptoStandard;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,6 +29,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
@@ -49,8 +51,11 @@ public class iText {
     private final static String KEYSTORE="E:\\clouddocstruststore.jks";
     private final static String PASSWORD="123456";
     
-    String createPDF(String route, String binary) {
-        String ret = "";
+    private final static String REASONSIGN = "CloudDocs Sign Platform";
+    private final static String LOCATIONSIGN = "Firmado electrónicamente con TrustedX";
+    
+    //String createPDF(String route, String binary) {
+        /*String ret = "";
         try {
             String file = ROUTE_TEMP.concat(route);
             
@@ -85,7 +90,7 @@ public class iText {
                 ExternalSignature es = new Signature(Base64.getDecoder().decode(binary)); 
                 
                 KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-                ks.load(new FileInputStream(KEYSTORE), PASSWORD.toCharArray());
+                ks.load(new FileInputStream(KEYSTORE), PASSWORD.toCharArray());*/
                 
                 /*PKIXParameters params = new PKIXParameters(ks);
                 Iterator it = params.getTrustAnchors().iterator();
@@ -96,7 +101,7 @@ public class iText {
                     System.out.println(cert);
                 }*/
                 
-                String alias = (String)ks.aliases().nextElement();
+                /*String alias = (String)ks.aliases().nextElement();
                 System.out.println(alias+" certificado");
                 Certificate cert = ks.getCertificate(alias);
                 
@@ -104,8 +109,8 @@ public class iText {
                 System.out.println(alias2+" certificado");
                 Certificate cert2 = ks.getCertificate(alias2);
                 
-                MakeSignature.signDetached(appearance, new BouncyCastleDigest(), es, new Certificate []{cert, cert2}, null, null, null, 0, CryptoStandard.CMS); 
-                
+                MakeSignature.signDetached(appearance, new BouncyCastleDigest(), es, new Certificate []{cert, cert2}, null, null, null, 0, CryptoStandard.CMS); */
+                /*
             }else{
                 ret = namefile+".pem";
                 FileWriter fw=new FileWriter(ret);
@@ -122,8 +127,9 @@ public class iText {
         } catch (GeneralSecurityException ex) {
             Logger.getLogger(iText.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return ret;
-    }
+        return ret;*/
+                //return "";
+    //}
 
     public String getHashFromPre(String route) {
         try{
@@ -148,6 +154,52 @@ public class iText {
         }
         return "";
     }
+
+    public String signPDF(String filename, String identity, String token_nav, String token_sign) throws IOException, DocumentException, GeneralSecurityException {
+        
+        String file = ROUTE_TEMP.concat(filename);
+        String [] n = file.split("\\.");
+        String n_comp = "";
+        for (int i=0; i<n.length-1;i++) {
+            n_comp+=n[i]+".";
+        }
+        String namefile = n_comp.substring(0, n_comp.length()-1);
+        String extension = n[n.length-1];
+        
+        String signedfilename = namefile+"_sign."+extension;
+                
+        PdfReader reader = new PdfReader(file); 
+        FileOutputStream os = new FileOutputStream(signedfilename); 
+        PdfStamper stamper = PdfStamper.createSignature(reader, os, '\0'); 
+
+        PdfSignatureAppearance appearance = stamper.getSignatureAppearance(); 
+        appearance.setReason(REASONSIGN); 
+        appearance.setLocation(LOCATIONSIGN); 
+        appearance.setVisibleSignature(new Rectangle(36, 748, 144, 780), 1, "sig"); 
+
+        ExternalSignature es = new TrustedXSignature(identity,token_sign); 
+        
+        TrustedX trustedX = new TrustedX();
+        trustedX.init();
+        byte[] certbyte = trustedX.getCertificateByte(identity, token_nav);
+        
+        System.out.println("-------MI-CERTIFICADO---------");
+        System.out.println(new String(Base64.getEncoder().encode(certbyte)));
+        System.out.println(certbyte.length);
+        System.out.println("----------------");
+        
+        InputStream is = new ByteArrayInputStream(certbyte);
+        
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        Certificate cert = cf.generateCertificate(is);
+        
+        ExternalDigest dig = new BouncyCastleDigest();
+        
+        MakeSignature.signDetached(appearance, dig, es, new Certificate[]{cert}, null, null, null, 0, CryptoStandard.CADES); 
+        
+        return signedfilename;
+    }
     
     
+    //return new String(Base64.getEncoder().encode(sha1.digest()));
 }

@@ -5,10 +5,14 @@
  */
 package es.ediaz.servlets;
 
+import com.itextpdf.text.DocumentException;
 import es.ediaz.common.iText;
 import es.ediaz.common.TrustedX;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -85,20 +89,37 @@ public class SignServlet extends HttpServlet {
                 
                 
                 iText itext = new iText();
-                jsonResp = sign.sign(itext.getHashFromPre(filename), identity, tokensign, filename);
+                String localurl = "";
+                try {
+                    localurl = itext.signPDF(filename, identity, token, tokensign);
+                } catch (DocumentException ex) {
+                    Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (GeneralSecurityException ex) {
+                    Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                    //subir new url;
+                    
+                    //if ok
+                    //redirect callback
+                    //else
+                    //alert
+                
+                
+                //jsonResp = sign.sign(itext.getHashFromPre(filename), identity, token, tokensign, filename);
                 
                 System.out.println("-------");
-                System.out.println(jsonResp);
+                System.out.println(localurl);
                 System.out.println("-------");
                 
-                resp = (HashMap<Object, Object>) JSON.parse(jsonResp);
+                //resp = (HashMap<Object, Object>) JSON.parse(jsonResp);
                 
-                if(resp.get("ccd").equals("200")){
+                //if(resp.get("ccd").equals("200")){
                     
                     //SUBIR DOCUMENTO.
-                    System.out.println("----");
-                    System.out.println(callback);
-                    System.out.println(filename);
+                    //System.out.println("----");
+                    //System.out.println(callback);
+                    //System.out.println(filename);
                    /*
                     
                     String tag = request.getSession(false).getAttribute("store_servlet").toString();
@@ -136,10 +157,22 @@ public class SignServlet extends HttpServlet {
                     System.out.println("----");
                     //filedropbox?a=upload&path=CHUCHU&file=
                     */
+                   
+                   
+                   
                     response.sendRedirect("nav.jsp?callback="+callback);
-                }else{
-                    response.sendRedirect("nav.jsp");
-                }
+                    
+                    
+                    
+                //}else{
+                    
+                    
+                    
+                    //response.sendRedirect("nav.jsp");
+                    
+                    
+                    
+                //}
             }else if(action != null && action.length()>0 && action.equals("clientsign")){
                 JSONObject resp = new JSONObject();
                 
