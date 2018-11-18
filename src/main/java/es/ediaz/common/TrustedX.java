@@ -8,7 +8,6 @@ package es.ediaz.common;
 import com.itextpdf.text.pdf.ByteBuffer;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,11 +16,9 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,8 +48,10 @@ public class TrustedX{
     
     Properties p;
     String routejks = "E:/clouddocstruststore.jks";
+    //String routejks = "/opt/clouddocstruststore.jks";
     String passjks = "123456";
     String returnUrl = "http://localhost:8080/sign";
+    //String returnUrl = "https://uoc.safelayer.com:2080/sign";
     String baseUrl = "https://uoc.safelayer.com:8082";
     
     String url = "uoc.safelayer.com";
@@ -110,18 +109,18 @@ public class TrustedX{
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
 
-        String line = null;
+        String line;
         try {
             while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
+                sb.append(line).append("\n");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ex) {
+                Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return sb.toString();
@@ -140,7 +139,9 @@ public class TrustedX{
             }
 
             return new String(Base64.getEncoder().encode(buff.getBuffer()));
-        }catch(Exception ex){
+        }catch(IOException ex){
+            Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
         }
         return "";

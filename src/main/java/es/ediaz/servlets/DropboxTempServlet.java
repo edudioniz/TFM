@@ -41,6 +41,7 @@ public class DropboxTempServlet extends HttpServlet {
         
         //String filename = cntx.getRealPath("E:\\1.png");
         String filename = "E:\\"+request.getSession().getAttribute("tmphash")+".png";
+        //String filename = "/tmp/"+request.getSession().getAttribute("tmphash")+".png";
         
         String mime = cntx.getMimeType(filename);
         

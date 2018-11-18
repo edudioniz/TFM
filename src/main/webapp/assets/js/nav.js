@@ -318,5 +318,6 @@ function init(route, servlet){
         var identity = $('#modal_sign_cert').val();
         sign_file(route,identity);
     });
+    $
     load_data(route,servlet);
 }

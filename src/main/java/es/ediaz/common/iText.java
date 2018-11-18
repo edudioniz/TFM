@@ -48,7 +48,9 @@ import org.apache.commons.io.FileUtils;
 public class iText {
     
     private final static String ROUTE_TEMP="E:\\";
+    //private final static String ROUTE_TEMP="/tmp/";
     private final static String KEYSTORE="E:\\clouddocstruststore.jks";
+    //private final static String KEYSTORE="/opt/clouddocstruststore.jks";
     private final static String PASSWORD="123456";
     
     private final static String REASONSIGN = "CloudDocs Sign Platform";

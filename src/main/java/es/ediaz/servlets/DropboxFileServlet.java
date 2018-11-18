@@ -46,6 +46,7 @@ import org.json.JSONObject;
 public class DropboxFileServlet extends HttpServlet {
     
     private final static String ROUTE_TEMP="E:\\";
+    //private final static String ROUTE_TEMP="/tmp/";
         
     private final static String DP_API_KEY = "qr73qpuz6cebeaw";
     private final static String DP_API_SECRET = "abn8e2dk0toyjs3";

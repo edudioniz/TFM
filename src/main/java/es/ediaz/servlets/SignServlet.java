@@ -6,6 +6,7 @@
 package es.ediaz.servlets;
 
 import com.itextpdf.text.DocumentException;
+import es.ediaz.common.Dropbox;
 import es.ediaz.common.iText;
 import es.ediaz.common.TrustedX;
 import java.io.IOException;
@@ -89,90 +90,21 @@ public class SignServlet extends HttpServlet {
                 
                 
                 iText itext = new iText();
-                String localurl = "";
+                Dropbox db = new Dropbox(session);
+                
+                String msj = "";
                 try {
-                    localurl = itext.signPDF(filename, identity, token, tokensign);
+                    String localurl = itext.signPDF(filename, identity, token, tokensign);
+                    db.upload(localurl, callback+"/"+localurl.split("__")[1]);
                 } catch (DocumentException ex) {
                     Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
+                }catch(IllegalArgumentException ex){
+                    msj = "&msj=EL%20archivo%20ya%20est%C3%A1%20firmado";
                 } catch (GeneralSecurityException ex) {
                     Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                response.sendRedirect("nav.jsp?callback="+callback+msj);
                 
-                    //subir new url;
-                    
-                    //if ok
-                    //redirect callback
-                    //else
-                    //alert
-                
-                
-                //jsonResp = sign.sign(itext.getHashFromPre(filename), identity, token, tokensign, filename);
-                
-                System.out.println("-------");
-                System.out.println(localurl);
-                System.out.println("-------");
-                
-                //resp = (HashMap<Object, Object>) JSON.parse(jsonResp);
-                
-                //if(resp.get("ccd").equals("200")){
-                    
-                    //SUBIR DOCUMENTO.
-                    //System.out.println("----");
-                    //System.out.println(callback);
-                    //System.out.println(filename);
-                   /*
-                    
-                    String tag = request.getSession(false).getAttribute("store_servlet").toString();
-                    String className = "";
-                    try {
-                        className = SignServlet.class.getField("CLASS_FILE_STORE_"+tag).get(this).toString();
-                        
-                        Class<?> clazz = Class.forName(className);
-                        Constructor<?> ctor = clazz.getConstructor();
-                        
-                        HttpServlet serverFile = (HttpServlet) ctor.newInstance();
-                        serverFile.service(request, response);
-                    
-                    } catch (NoSuchFieldException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (SecurityException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IllegalArgumentException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IllegalAccessException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (NoSuchMethodException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (InstantiationException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (InvocationTargetException ex) {
-                        Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    System.out.println("----");
-                    System.out.println(tag);
-                    System.out.println(class_name);        
-                    
-                    System.out.println("----");
-                    //filedropbox?a=upload&path=CHUCHU&file=
-                    */
-                   
-                   
-                   
-                    response.sendRedirect("nav.jsp?callback="+callback);
-                    
-                    
-                    
-                //}else{
-                    
-                    
-                    
-                    //response.sendRedirect("nav.jsp");
-                    
-                    
-                    
-                //}
             }else if(action != null && action.length()>0 && action.equals("clientsign")){
                 JSONObject resp = new JSONObject();
                 

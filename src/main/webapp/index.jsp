@@ -38,7 +38,7 @@
 	        	<p class="lead">Plataforma de firma de documentos con dispositivos de firma en la nube. Sube tu firma a TrustedX y firma tus documentos en la nube.</p>
 	        	<p class="lead">
 	          		<div class="btn-group btn-group-lg" role="group" aria-label="Botones de Autentificacion">
-                                    <button type="button" class="btn btn-secondary auth-button-drive"><i class="fab fa-google-drive"></i> Google<pre class="sign-label">con TrustedX®</pre></button>
+                                    <button type="button" class="btn btn-secondary auth-button-drive" disabled><i class="fab fa-google-drive"></i> Google<pre class="sign-label">con TrustedX®</pre></button>
 				  		<button type="button" class="btn btn-secondary auth-button-dropbox"><i class="fab fa-dropbox"></i> Dropbox<pre class="sign-label">con TrustedX®</pre></button>
 					</div>
                         

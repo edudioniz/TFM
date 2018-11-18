@@ -7,10 +7,8 @@ package es.ediaz.common;
 
 import com.itextpdf.text.pdf.ByteBuffer;
 import com.itextpdf.text.pdf.security.ExternalSignature;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +39,9 @@ import org.json.JSONObject;
  */
 public class TrustedXSignature implements ExternalSignature {
     private final static String ROUTE_TEMP="E:\\";
+    //private final static String ROUTE_TEMP="/tmp/";
     private final static String JKS="E:\\clouddocstruststore.jks";
+    //private final static String JKS="/opt/clouddocstruststore.jks";
     private final static String JKS_PASSWORD="123456";
     
     private String SIGN_ALG= "rsa-sha256";
@@ -56,7 +56,6 @@ public class TrustedXSignature implements ExternalSignature {
             SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(new File(JKS), JKS_PASSWORD.toCharArray(),new TrustSelfSignedStrategy()).build();
             SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1.2" }, null, SSLConnectionSocketFactory.getDefaultHostnameVerifier());
             CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-            
             this.client = httpclient;
             this.identity = identity;
             this.token = token;
@@ -96,13 +95,13 @@ public class TrustedXSignature implements ExternalSignature {
             httppost.addHeader("Authorization","Bearer "+token);
             
             JSONObject tmp = new JSONObject();
-            System.out.println("-------FIRMA-IN---------");
-            System.out.println(new String(Base64.getEncoder().encode(message)));
-            System.out.println(message.length);
-            System.out.println("---------sha-------");
-            System.out.println(new String(Base64.getEncoder().encode(sha256(message))));
-            System.out.println(sha256(message).length);
-            System.out.println("----------------");
+            //System.out.println("-------FIRMA-IN---------");
+            //System.out.println(new String(Base64.getEncoder().encode(message)));
+            //System.out.println(message.length);
+            //System.out.println("---------sha-------");
+            //System.out.println(new String(Base64.getEncoder().encode(sha256(message))));
+            //System.out.println(sha256(message).length);
+            //System.out.println("----------------");
             tmp.put("digest_value", sha256(message));
             tmp.put("signature_algorithm", SIGN_ALG);
             tmp.put("sign_identity_id", identity);
@@ -112,10 +111,10 @@ public class TrustedXSignature implements ExternalSignature {
             
             output = getBinaryFromStream(response.getEntity().getContent());
             
-            System.out.println("----------------");
-            System.out.println(new String(Base64.getEncoder().encode(output)));
-            System.out.println(output.length);
-            System.out.println("--------FIRM-OUT--------");
+            //System.out.println("----------------");
+            //System.out.println(new String(Base64.getEncoder().encode(output)));
+            //System.out.println(output.length);
+            //System.out.println("--------FIRM-OUT--------");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(TrustedXSignature.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -131,17 +130,16 @@ public class TrustedXSignature implements ExternalSignature {
         try{
             MessageDigest sha1 = MessageDigest.getInstance("SHA-256");
             ByteBuffer buff = new ByteBuffer();
-            //byte[] buffer = new byte[4096];
             byte[] buffer = new byte[4096];
             int len = is.read(buffer);
-
             while (len != -1) {
                 buff.append(buffer, 0, len);
                 len = is.read(buffer);
             }
-
             output = buff.getBuffer();
-        }catch(Exception ex){
+        }catch(IOException ex){
+            Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(TrustedX.class.getName()).log(Level.SEVERE, null, ex);
         }
         return output;
