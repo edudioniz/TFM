@@ -6,7 +6,10 @@
 package es.ediaz.common;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -37,6 +40,8 @@ import org.mortbay.util.ajax.JSON;
  * @author Eduardo
  */
 public class Drive {
+    private final static String ROUTE_TEMP="E:\\";
+    
     private final String client_id = "247410889511-svsohn3f0vucpjvrueesdvv4v6srhjnh.apps.googleusercontent.com";
     private final String client_secret = "gY17vKGtojlSPFyNMre7138j";
     
@@ -109,7 +114,7 @@ public class Drive {
         }else{
             JSONObject prefile = new JSONObject(this.details(token, path));
             if(prefile.getJSONObject("data").get("type").equals("file")){
-                json = internalView(prefile.getJSONObject("data"));
+                json = internalView(token, prefile.getJSONObject("data"));
             }else{
                 json = internalList(token, path);
             }
@@ -223,16 +228,28 @@ public class Drive {
         return jsonresponse;
     }
     
-    private String internalView(JSONObject in) {
+    private String internalView(String token, JSONObject in) {
         JSONObject obj = new JSONObject();
         obj.put("origin", "drive");
         if(in.has("thumbnail")){
-            
-            //DESCARGAR EL FICHERO EN EL HASH
-            
-            //SEGUIR AQUI DESCARGAR EL FICHERO PARA ACCEDER DESDE PREFILE
-            
-            //----------------------------------
+            CloseableHttpResponse response = null;
+            try {
+                System.err.println(in.getString("thumbnail"));
+                HttpGet http = new HttpGet(in.getString("thumbnail"));
+                http.addHeader("Content-Type","application/json");
+                response = this.client.execute(http);
+                InputStream input = response.getEntity().getContent();
+                byte[] buffer = new byte[255555555];
+                input.read(buffer);
+                File targetFile = new File(ROUTE_TEMP+hash+".png");
+                System.out.println(ROUTE_TEMP+hash+".png");
+                OutputStream outStream = new FileOutputStream(targetFile);
+                outStream.write(buffer);
+                outStream.flush();
+                input.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             obj.put("ccd", "210");
             obj.put("msj", "Thumbnail generated correctly");
