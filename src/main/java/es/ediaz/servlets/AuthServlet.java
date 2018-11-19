@@ -15,7 +15,7 @@ public class AuthServlet extends HttpServlet {
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         if(request.getParameter("drive")!=null){
-            Drive drive = new Drive();
+            Drive drive = new Drive(null);
             if(request.getParameter("code")!=null){
                 System.out.println("DRIVE CODE");
                 

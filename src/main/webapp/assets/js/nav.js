@@ -58,7 +58,7 @@ function compose_route(data){
 function clear_navbar(){
     $("#nav_list ol").html("");
 }
-function append_navbar_type_google(){
+function append_navbar_type_drive(){
     str = '<li class="breadcrumb-item"><a href="" class="nav-btn" data-route=""><i class="fab fa-google-drive"></i> Google Drive</a></li>';
     return str;
 }

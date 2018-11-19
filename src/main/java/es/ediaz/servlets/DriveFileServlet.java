@@ -5,15 +5,10 @@
  */
 package es.ediaz.servlets;
 
-import com.dropbox.core.DbxAppInfo;
-import com.dropbox.core.DbxRequestConfig;
-import com.dropbox.core.v2.DbxClientV2;
-import es.ediaz.temporales.*;
+import es.ediaz.common.Drive;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.annotation.WebInitParam;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,8 +18,8 @@ import javax.servlet.http.HttpSession;
  *
  * @author Eduardo
  */
-@WebServlet(urlPatterns = {"/file"})
-public class FileServlet extends HttpServlet {
+@WebServlet(urlPatterns = {"/filedrive"})
+public class DriveFileServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -39,7 +34,16 @@ public class FileServlet extends HttpServlet {
             
             String action = request.getParameter("a");
             if(action != null && action.length()>0 && action.equals("nav")){
-                //jsonResp = DropboxFileServlet.actionNavigator(request, client, tmp_hash.toString());
+                Drive drive = new Drive(tmp_hash.toString());
+                jsonResp = drive.list(token, request.getParameter("path"));
+
+
+
+
+
+
+
+//jsonResp = DropboxFileServlet.actionNavigator(request, client, tmp_hash.toString());
             /*}else if(action != null && action.length()>0 && action.equals("downloadToSign")){
                 jsonResp = DropboxFileServlet.actionDownloadToLocal(request, client, tmp_hash.toString());
             }else if(action != null && action.length()>0 && action.equals("download")){
