@@ -33,24 +33,15 @@ public class DriveFileServlet extends HttpServlet {
         if(token!=null || tmp_hash!=null){
             
             String action = request.getParameter("a");
+            Drive drive = new Drive(tmp_hash.toString());
             if(action != null && action.length()>0 && action.equals("nav")){
-                Drive drive = new Drive(tmp_hash.toString());
                 jsonResp = drive.list(token, request.getParameter("path"));
-
-
-
-
-
-
-
-//jsonResp = DropboxFileServlet.actionNavigator(request, client, tmp_hash.toString());
-            /*}else if(action != null && action.length()>0 && action.equals("downloadToSign")){
-                jsonResp = DropboxFileServlet.actionDownloadToLocal(request, client, tmp_hash.toString());
             }else if(action != null && action.length()>0 && action.equals("download")){
-                jsonResp = DropboxFileServlet.actionDownloadFileUrl(request, client);
+                jsonResp = drive.downloadFileUrl(token, request.getParameter("path"));
+            }else if(action != null && action.length()>0 && action.equals("downloadToSign")){
+                jsonResp = drive.downloadToLocal(token, request.getParameter("path"));
             }else if(action != null && action.length()>0 && action.equals("upload")){
-                jsonResp = DropboxFileServlet.actionUploadFile(request, client);
-            */
+                jsonResp = "NO ACTION";
             }else{
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }

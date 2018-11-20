@@ -66,14 +66,6 @@ public class SignServlet extends HttpServlet {
             }else if(action != null && action.length()>0 && action.equals("del")){
                 String id = request.getParameter("id");
                 jsonResp = sign.deleteIdentity(token, id);
-            //}else if(action != null && action.length()>0 && action.equals("sign")){
-            //    iText itext = new iText();
-            //    String hash = itext.getHashFromPre();
-            //    String identity = request.getParameter("id");
-            //    String tokensign = request.getParameter("token");
-            //    jsonResp = sign.sign(hash, identity, tokensign);
-            //}else if(action != null && action.length()>0 && action.equals("signcode")){
-            //    jsonResp = sign.getCodeToSign(request.getParameter("id"));
             }else if(action != null && action.length()>0 && action.equals("signtoken")){
                 jsonResp = sign.getTokenSign(request.getParameter("code"));
                 
@@ -85,9 +77,17 @@ public class SignServlet extends HttpServlet {
                 HashMap<Object, Object> resp = (HashMap<Object, Object>) JSON.parse(jsonResp);
                 String tokensign = resp.get("access_token").toString();
                 
+                
                 String [] filearray = fileid.split("/");
                 String filename = tmp_hash.toString()+"__"+filearray[filearray.length-1];
                 
+                /*
+                
+                
+                HAY QUE MODIFICAR COSAS AQUÍ
+                
+                
+                */
                 
                 iText itext = new iText();
                 Dropbox db = new Dropbox(session);

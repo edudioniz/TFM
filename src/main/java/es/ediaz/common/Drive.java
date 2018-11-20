@@ -5,6 +5,7 @@
  */
 package es.ediaz.common;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -33,7 +33,6 @@ import org.apache.http.ssl.SSLContexts;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mortbay.util.ajax.JSON;
 
 /**
  *
@@ -125,7 +124,6 @@ public class Drive {
     public String internalList(String token, String path){
         CloseableHttpResponse response = null;
         String jsonresponse = "";
-        
         String url = "https://www.googleapis.com/drive/v2/files/"+path+"/children?maxResults=10";
         JSONObject rsp = null;
         try {
@@ -137,7 +135,6 @@ public class Drive {
             
             JSONObject obj = new JSONObject();
             rsp = new JSONObject(HTTPUtils.getStringFromStream(response.getEntity().getContent()));
-            
             
             JSONObject fileparsed;
             JSONArray filelist = new JSONArray();
@@ -178,6 +175,55 @@ public class Drive {
         return jsonresponse;
     }
     
+    public String downloadToLocal(String token, String id){
+        CloseableHttpResponse response = null;
+        String url = "https://www.googleapis.com/drive/v3/files/"+id+"?alt=media";
+        JSONObject filed = new JSONObject(this.details(token, id));
+        String local_route = ROUTE_TEMP+hash+"__"+filed.getJSONObject("data").getString("title");
+        try {
+            HttpGet http = new HttpGet(url);
+            http.addHeader("Authorization","Bearer "+token);
+            response = client.execute(http);
+            
+            FileOutputStream outStream = new FileOutputStream(local_route);
+            response.getEntity().writeTo(outStream);
+           
+            outStream.flush();
+            outStream.close();
+        
+        } catch (IOException ex) {
+            Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        JSONObject obj = new JSONObject();
+        obj.put("ccd", "200");
+        obj.put("msj", "OK");
+        
+        return obj.toString();
+    }
+    
+    public String downloadFileUrl(String token, String id){
+        JSONObject filebrute = new JSONObject(this.details(token, id));
+        if(filebrute.getJSONObject("data").has("downloadUrl")){
+            JSONObject obj = new JSONObject();
+            obj.put("ccd", "200");
+            obj.put("msj", "OK");
+            obj.put("url", filebrute.getJSONObject("data").getString("webContentLink"));
+            
+            System.out.println("----");
+            System.out.println(filebrute.getJSONObject("data").getString("webContentLink"));
+            System.out.println("----");
+            
+            return obj.toString();
+        }else{
+            JSONObject obj = new JSONObject();
+            obj.put("ccd", "400");
+            obj.put("msj", "No se puede descargar el fichero solicitado");
+            obj.put("url", "");
+            return obj.toString();
+        }
+    }
+    
     public String details(String token, String id){
         CloseableHttpResponse response = null;
         String jsonresponse = "";
@@ -196,6 +242,9 @@ public class Drive {
             JSONObject parsedO = new JSONObject();
             parsedO.put("id", rsp.get("id"));
             parsedO.put("title", rsp.get("title"));
+            if(rsp.has("webContentLink")){
+                parsedO.put("webContentLink", rsp.get("webContentLink"));
+            }
             if(rsp.has("downloadUrl")){
                 parsedO.put("downloadUrl", rsp.get("downloadUrl"));
             }
@@ -204,14 +253,15 @@ public class Drive {
             }else{
                 parsedO.put("type", "file");
             }
-            
             parsedO.put("iconLink", rsp.get("iconLink"));
             parsedO.put("parents", rsp.get("parents"));
             if(rsp.has("thumbnailLink")){
-                parsedO.put("thumbnail", rsp.get("thumbnailLink"));
+                parsedO.put("thumbnail", rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
+                System.out.println("**********************");
+                System.out.println(rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
+                System.out.println("**********************");
             }
             obj.put("data", parsedO);
-            
             if(response.getStatusLine().getStatusCode() == 200){
                 obj.put("ccd", "200");
                 obj.put("msj", "OK");
@@ -238,15 +288,12 @@ public class Drive {
                 HttpGet http = new HttpGet(in.getString("thumbnail"));
                 http.addHeader("Content-Type","application/json");
                 response = this.client.execute(http);
-                InputStream input = response.getEntity().getContent();
-                byte[] buffer = new byte[255555555];
-                input.read(buffer);
-                File targetFile = new File(ROUTE_TEMP+hash+".png");
-                System.out.println(ROUTE_TEMP+hash+".png");
-                OutputStream outStream = new FileOutputStream(targetFile);
-                outStream.write(buffer);
+                
+                FileOutputStream outStream = new FileOutputStream(ROUTE_TEMP+hash+".png");
+                response.getEntity().writeTo(outStream);
                 outStream.flush();
-                input.close();
+                outStream.close();
+                
             } catch (IOException ex) {
                 Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
             }

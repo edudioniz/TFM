@@ -159,6 +159,11 @@ public class iText {
 
     public String signPDF(String filename, String identity, String token_nav, String token_sign) throws IOException, DocumentException, GeneralSecurityException {
         
+        System.out.println("--sign--");
+        System.out.println(filename);
+        System.out.println("--------");
+        
+        
         String file = ROUTE_TEMP.concat(filename);
         String [] n = file.split("\\.");
         String n_comp = "";
