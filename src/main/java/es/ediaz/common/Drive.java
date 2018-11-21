@@ -153,6 +153,22 @@ public class Drive {
                 }else{
                     fileparsed.put("type", "file");
                 }*/
+                
+                /*JSONArray array = file.getJSONArray("parents");
+                
+                String routeStr = "";
+                String routeUrl = "";
+                for (Iterator<Object> par = array.iterator(); par.hasNext(); ) {
+                    JSONObject txt = (JSONObject) par.next();
+                    if(!txt.getBoolean("isRoot")){
+                        JSONObject detailParent = new JSONObject(this.details(token, txt.getString("id")));
+                        routeStr += "/"+detailParent.getJSONObject("data").getString("title");
+                        routeUrl += "/"+detailParent.getJSONObject("data").getString("id");
+                    }
+                }
+                fileparsed.put("routeStr", routeStr);
+                fileparsed.put("routeUrl", routeUrl);*/
+                
                 fileparsed.put("tmp", file.toString());
                 filelist.put(fileparsed);
             }

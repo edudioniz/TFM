@@ -52,6 +52,7 @@ public class DropboxAuthServlet extends HttpServlet {
                     );
                     request.getSession(true).setAttribute("token", authFinish.getAccessToken());
                     request.getSession(true).setAttribute("tmphash", UUID.randomUUID());
+                    request.getSession(true).setAttribute("type_store_servlet", "url");
                     request.getSession(true).setAttribute("store_servlet", "filedropbox");
 
                     response.sendRedirect("/sign");

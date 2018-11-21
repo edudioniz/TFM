@@ -24,6 +24,7 @@ public class AuthServlet extends HttpServlet {
                 
                 request.getSession(true).setAttribute("token", json.get("access_token"));
                 request.getSession(true).setAttribute("tmphash", UUID.randomUUID());
+                request.getSession(true).setAttribute("type_store_servlet", "hash");
                 request.getSession(true).setAttribute("store_servlet", "filedrive");
 
                 response.sendRedirect("/sign");

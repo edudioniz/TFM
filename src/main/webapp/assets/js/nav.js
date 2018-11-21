@@ -1,5 +1,8 @@
+var nav_obj_hash;
+
 var nav_bar;
 var file_servlet;
+var type_file_servlet;
 
 //cert
 function force_sign(ev){
@@ -27,6 +30,29 @@ function force_download(ev){
 function navigator_launch(ev){
     load_data(ev.target.getAttribute('data-route'));
 }
+function navigator_launch_with_trace(ev){
+    if(ev.target.getAttribute('data-index')!==null && ev.target.getAttribute('data-title')<nav_obj_hash.length-1){
+        console.log(JSON.stringify(nav_obj_hash))
+        console.log(nav_obj_hash.length);
+        console.log(ev.target.getAttribute('data-index'));
+        for(var i=0; i<=(nav_obj_hash.length-ev.target.getAttribute('data-index'));i=i+1 ){
+            console.log("remove");
+            nav_obj_hash.splice(-1,1);
+        }
+        console.log("size: "+nav_obj_hash.length);
+        load_data(ev.target.getAttribute('data-route'));
+        console.log(JSON.stringify(nav_obj_hash));
+    }else{
+        if(ev.target.getAttribute('data-route')!==""){
+            nav_obj_hash.push({title : ev.target.getAttribute('data-title'), route:ev.target.getAttribute('data-route')});
+        }else{
+            clear_navbar();
+            nav_obj_hash = [];
+        }
+        load_data(ev.target.getAttribute('data-route'));
+    }
+}
+
 function set_navbar(jsondata){
     $("#nav_list ol").append(
         window["append_navbar_type_"+jsondata['origin']]()
@@ -48,6 +74,26 @@ function set_navbar(jsondata){
         navigator_launch(ev);
     });
 }
+function set_navbar_by_hash(jsondata){
+    $("#nav_list ol").append(
+        window["append_navbar_type_"+jsondata['origin']]()
+    );
+    
+    if(nav_obj_hash.length > 0){
+        for (var i = 0; i < nav_obj_hash.length-1; i++){
+            $("#nav_list ol").append(
+                append_navbar_route(nav_obj_hash[i]['title'], nav_obj_hash[i]['route'], i+1)
+            );
+        }
+        $("#nav_list ol").append(
+            append_navbar_route_last(nav_obj_hash[nav_obj_hash.length-1]['title'])
+        );
+    }
+    $('.nav-btn').click('click', function (ev) {
+        ev.preventDefault();
+        navigator_launch_with_trace(ev);
+    });
+}
 function compose_route(data){
     str = "";
     for (var i = 1; i < data.length-1; i++){
@@ -66,8 +112,8 @@ function append_navbar_type_dropbox(){
     str = '<li class="breadcrumb-item"><a href="" class="nav-btn" data-route=""><i class="fab fa-dropbox"></i> Dropbox</a></li>';
     return str;
 }
-function append_navbar_route(title, route){
-    str = '<li class="breadcrumb-item" class="nav-btn"><a href="" class="nav-btn" data-route="'+route+'"><i class="far fa-folder-open"></i> '+title+'</a></li>';
+function append_navbar_route(title, route, i=null){
+    str = '<li class="breadcrumb-item" class="nav-btn"><a href="" class="nav-btn" data-route="'+route+'" data-index="'+i+'"><i class="far fa-folder-open"></i> '+title+'</a></li>';
     return str;
 }
 function append_navbar_route_last(title){
@@ -115,9 +161,15 @@ function compose_list(jsondata, destiny="#list_file tbody"){
             window["append_"+jsondata['data'][i]['type']](id, title, route)
         );
     }
-    $('.folder-btn').click('click', function (ev) {
-        navigator_launch(ev);
-    });
+    if(type_file_servlet==="hash"){
+        $('.folder-btn').click('click', function (ev) {
+            navigator_launch_with_trace(ev);
+        });
+    }else{
+        $('.folder-btn').click('click', function (ev) {
+           navigator_launch(ev);
+        });
+    }
     $('.file-btn').click('click', function (ev) {
         file_launch(ev);
     });
@@ -135,15 +187,22 @@ function resetModalPDF(){
 }
        
 // HTTP request
-function load_data(path, servlet=null){
+function load_data(path, servlet=null, type=null){
     if(servlet !== null){
         file_servlet = servlet;
+    }
+    if(type !== null){
+        type_file_servlet = type;
     }
     set_loader();
     $.ajax( file_servlet+"?a=nav&path="+path )
         .done(function(data) {
             clear_navbar();
-            set_navbar(JSON.parse(data));
+            if(type_file_servlet === "hash"){
+                set_navbar_by_hash(JSON.parse(data));
+            }else{
+                set_navbar(JSON.parse(data));
+            }
             
             clear_list();
             compose_list(JSON.parse(data));
@@ -303,7 +362,8 @@ function download_to_sign(route, callback){
         });
 }
 
-function init(route, servlet){
+function init(route, servlet, type){
+    nav_obj_hash = [];
     $('#modal_pdf_download_btn').click(function(ev){
         ev.preventDefault();
         force_download(ev);
@@ -318,6 +378,5 @@ function init(route, servlet){
         var identity = $('#modal_sign_cert').val();
         sign_file(route,identity);
     });
-    $
-    load_data(route,servlet);
+    load_data(route,servlet, type);
 }

@@ -109,7 +109,7 @@
                     callback = request.getParameter("callback");
                 }
             %>
-            init("<%= callback %>", "<%= request.getSession(false).getAttribute("store_servlet") %>");
+            init("<%= callback %>", "<%= request.getSession(false).getAttribute("store_servlet") %>", "<%= request.getSession(false).getAttribute("type_store_servlet") %>");
 	</script>
         
 
