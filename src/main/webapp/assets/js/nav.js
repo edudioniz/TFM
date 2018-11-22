@@ -286,10 +286,17 @@ function download_file(route){
 }
 function sign_file(route,id){
     $('#modal_pdf_ultimate_sign_btn').html('<i class="fas fa-sync fa-spin"></i> Firmando... ');
-    download_to_sign(route, function(){
-        var call = route;
+    download_to_sign(route, function(filename){
+        
+        var call = "";
+        if(type_file_servlet==="hash"){
+            call = nav_obj_hash[nav_obj_hash.length-1]['route'];
+        }else{
+            call = route;
+        }
+        
         $('#modal_pdf_sign_btn').prop("disabled", true);
-        $.ajax( "sign?a=clientsign&callback="+call+"&id="+id+"&fileid="+route )
+        $.ajax( "sign?a=clientsign&callback="+call+"&id="+id+"&fileid="+route+"&filename="+filename )
             .done(function(data) {
                 var json = JSON.parse(data);
                 if(json['ccd'] == "200"){
@@ -346,7 +353,7 @@ function download_to_sign(route, callback){
         .done(function(data) {
             var json = JSON.parse(data);
             if(json['ccd'] === '200'){
-                callback();
+                callback(json['data']['filename']);
             }else{
                alert( "Error al firmar el fichero" );
                return;

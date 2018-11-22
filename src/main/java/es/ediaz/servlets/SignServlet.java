@@ -6,6 +6,7 @@
 package es.ediaz.servlets;
 
 import com.itextpdf.text.DocumentException;
+import es.ediaz.common.Drive;
 import es.ediaz.common.Dropbox;
 import es.ediaz.common.iText;
 import es.ediaz.common.TrustedX;
@@ -69,55 +70,60 @@ public class SignServlet extends HttpServlet {
             }else if(action != null && action.length()>0 && action.equals("signtoken")){
                 jsonResp = sign.getTokenSign(request.getParameter("code"));
                 
+                String type_store = (String) request.getSession(false).getAttribute("selected_fileid");
+                
                 Object tmp_hash = request.getSession(false).getAttribute("tmphash");
                 String fileid = (String) request.getSession(false).getAttribute("selected_fileid");
+                String filename = (String) request.getSession(false).getAttribute("selected_filename");
                 String identity = (String) request.getSession(false).getAttribute("selected_identity");
                 String callback = (String) request.getSession(false).getAttribute("selected_callback");
                 
                 HashMap<Object, Object> resp = (HashMap<Object, Object>) JSON.parse(jsonResp);
                 String tokensign = resp.get("access_token").toString();
                 
-                
-                String [] filearray = fileid.split("/");
-                String filename = tmp_hash.toString()+"__"+filearray[filearray.length-1];
-                
-                /*
-                
-                
-                HAY QUE MODIFICAR COSAS AQUÍ
-                
-                
-                */
-                
                 iText itext = new iText();
-                Dropbox db = new Dropbox(session);
-                
                 String msj = "";
                 try {
-                    String localurl = itext.signPDF(filename, identity, token, tokensign);
-                    db.upload(localurl, callback+"/"+localurl.split("__")[1]);
+                    String localurl = itext.signPDF(tmp_hash.toString()+"__"+filename, identity, token, tokensign);
+                    if(request.getSession(false).getAttribute("store_servlet").equals("filedropbox")){
+                        Dropbox db = new Dropbox(session);
+                        db.upload(localurl, callback+"/"+localurl.split("__")[1]);
+                    }else if(request.getSession(false).getAttribute("store_servlet").equals("filedrive")){
+                        String store_token = (String)request.getSession(false).getAttribute("token");
+                        Drive drive = new Drive(tmp_hash.toString());
+                        drive.upload(store_token, localurl, fileid);
+                    }else{
+                        throw new UnsupportedOperationException("Not supported this provider yet.");
+                    }
                 } catch (DocumentException ex) {
                     Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
                 }catch(IllegalArgumentException ex){
                     msj = "&msj=EL%20archivo%20ya%20est%C3%A1%20firmado";
+                    Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (GeneralSecurityException ex) {
                     Logger.getLogger(SignServlet.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                
                 response.sendRedirect("nav.jsp?callback="+callback+msj);
                 
             }else if(action != null && action.length()>0 && action.equals("clientsign")){
                 JSONObject resp = new JSONObject();
                 
-                String [] route_split = request.getParameter("callback").split("/");
                 String callback = "";
-                for (int i=1; i<route_split.length-1;i++) {
-                    callback+="/"+route_split[i];
+                if(request.getSession(false).getAttribute("type_store_servlet").equals("hash")){
+                    callback = request.getParameter("callback");
+                }else{
+                    String [] route_split = request.getParameter("callback").split("/");
+                    for (int i=1; i<route_split.length-1;i++) {
+                        callback+="/"+route_split[i];
+                    }
                 }
                 
                 request.getSession(false).setAttribute("selected_callback", callback);
                 request.getSession(false).setAttribute("selected_identity", request.getParameter("id"));
                 request.getSession(false).setAttribute("selected_fileid", request.getParameter("fileid"));
-                
+                request.getSession(false).setAttribute("selected_filename", request.getParameter("filename"));
+              
                 if(request.getParameter("id") != null){
                     resp.put("ccd", 200);
                     resp.put("url", sign.getCodeToSign(request.getParameter("id")));

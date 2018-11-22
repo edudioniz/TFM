@@ -5,12 +5,14 @@
  */
 package es.ediaz.common;
 
-import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -20,12 +22,20 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.entity.BasicHttpEntity;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -211,9 +221,13 @@ public class Drive {
             Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        JSONObject sobj = new JSONObject();
+        sobj.put("filename", filed.getJSONObject("data").getString("title"));
+        
         JSONObject obj = new JSONObject();
         obj.put("ccd", "200");
         obj.put("msj", "OK");
+        obj.put("data", sobj);
         
         return obj.toString();
     }
@@ -226,9 +240,9 @@ public class Drive {
             obj.put("msj", "OK");
             obj.put("url", filebrute.getJSONObject("data").getString("webContentLink"));
             
-            System.out.println("----");
-            System.out.println(filebrute.getJSONObject("data").getString("webContentLink"));
-            System.out.println("----");
+            //System.out.println("----");
+            //System.out.println(filebrute.getJSONObject("data").getString("webContentLink"));
+            //System.out.println("----");
             
             return obj.toString();
         }else{
@@ -273,9 +287,9 @@ public class Drive {
             parsedO.put("parents", rsp.get("parents"));
             if(rsp.has("thumbnailLink")){
                 parsedO.put("thumbnail", rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
-                System.out.println("**********************");
-                System.out.println(rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
-                System.out.println("**********************");
+                //System.out.println("**********************");
+                //System.out.println(rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
+                //System.out.println("**********************");
             }
             obj.put("data", parsedO);
             if(response.getStatusLine().getStatusCode() == 200){
@@ -325,5 +339,60 @@ public class Drive {
             obj.put("type", "thumbnail");
         }
         return obj.toString();
+    }
+
+    public String upload(String token, String localurl, String fileid) throws FileNotFoundException, IOException {
+        String jsonresponse = "";
+        String url = "https://www.googleapis.com/upload/drive/v2/files?uploadType=media";
+        CloseableHttpResponse response = null;
+        try {
+            InputStream inputStream = new FileInputStream(new File(localurl));
+            HttpPost httppost = new HttpPost(url);
+            String type_content = "text/plain";
+            String filename = localurl.split("__")[1];
+            
+            
+            if(localurl.substring(localurl.lastIndexOf(".")).equals(".pdf")){
+                type_content = "application/pdf";
+            }
+            
+            httppost.addHeader("Content-Type",type_content);
+
+            httppost.addHeader("Authorization","Bearer "+token);
+            httppost.setEntity(new InputStreamEntity(inputStream));
+            response = this.client.execute(httppost);
+            
+            if(response.getStatusLine().getStatusCode() == 200){
+                
+                String data_upload = HTTPUtils.getStringFromStream(response.getEntity().getContent());
+                JSONObject json_upload = new JSONObject(data_upload);
+                
+                url = "https://www.googleapis.com/drive/v2/files/"+json_upload.getString("id");
+                //url = "https://www.googleapis.com/upload/drive/v2/files/"+json_upload.getString("id");
+                HttpPut http = new HttpPut(url);
+                http.addHeader("Authorization","Bearer "+token);
+                http.addHeader("Content-Type","application/json");
+                
+                JSONObject entity = new JSONObject();
+                entity.append("title", filename);
+                entity.append("originalFilename", filename);
+                entity.append("mimeType", type_content);
+                entity.append("fileExtension", filename.split("\\.")[0]);
+                http.setEntity(new StringEntity(entity.toString()));
+                
+                response = this.client.execute(http);
+                
+                jsonresponse = HTTPUtils.getStringFromStream(response.getEntity().getContent());
+            }else{
+                throw new Exception("Error code upload: "+response.getStatusLine().getStatusCode());
+            }
+            
+            System.out.println(jsonresponse);
+        } catch (IOException ex) {
+            Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return jsonresponse;
     }
 }

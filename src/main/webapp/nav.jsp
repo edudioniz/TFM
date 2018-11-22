@@ -1,5 +1,3 @@
-<%@page import="es.ediaz.core.*"%>
-
 <!DOCTYPE html>
 <html lang="es">
     <head>

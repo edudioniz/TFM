@@ -167,6 +167,7 @@ public class DropboxFileServlet extends HttpServlet {
                 JSONObject obj = new JSONObject();
                 obj.put("ccd", "200");
                 obj.put("msj", "OK");
+                obj.put("data", new JSONObject().put("filename", metadata.getName()));
                 jsonResp = obj.toString();
             }
         }
