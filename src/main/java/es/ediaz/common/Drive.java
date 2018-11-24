@@ -19,8 +19,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.json.Json;
 import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.http.HttpEntity;
@@ -159,7 +161,7 @@ public class Drive {
                 fileparsed.put("title", file.get("title"));
                 fileparsed.put("type", file.get("type"));
                 
-                fileparsed.put("tmp", file.toString());
+                //fileparsed.put("tmp", file.toString());
                 
                 filelist.put(fileparsed);
             }
@@ -172,15 +174,37 @@ public class Drive {
             En el JS ante 
             */
             JSONArray arrayparents = new JSONArray();
-            JSONObject parent = new JSONObject();
-            parent.put("title", "chuchu");
-            parent.put("route", "0B3iVQORiDYBUWFN6QjdaSjRvQ3M");
-            arrayparents.put(parent);
+            JSONObject parent;
             
-            parent = new JSONObject();
-            parent.put("title", "tutu");
-            parent.put("route", "0B3iVQORiDYBUWFN6QjdaSjRvQ3M");
-            arrayparents.put(parent);
+            boolean stop = true;
+            String inv_path = path;
+            
+            do{
+                String folder = this.details(token, inv_path);
+                JSONArray aparents = new JSONObject(folder).getJSONObject("data").getJSONArray("parents");
+                if(!aparents.isEmpty()&& aparents.length()>0){
+                    if(aparents.getJSONObject(0).getBoolean("isRoot")){
+                        
+                        parent = new JSONObject();
+                        parent.put("title", new JSONObject(this.details(token, inv_path)).getJSONObject("data").getString("title"));
+                        parent.put("route", inv_path);
+                        arrayparents.put(parent);
+                        
+                        stop = true;
+                    }else{
+                        parent = new JSONObject();
+                        parent.put("title", new JSONObject(this.details(token, inv_path)).getJSONObject("data").getString("title"));
+                        parent.put("route", inv_path);
+                        arrayparents.put(parent);
+                        
+                        inv_path = aparents.getJSONObject(0).getString("id");
+                        stop = false;
+                    }
+                    
+                }else{
+                    stop = true;
+                }
+            }while(!stop);
             obj.put("parent", arrayparents);
             
             if(response.getStatusLine().getStatusCode() == 200){

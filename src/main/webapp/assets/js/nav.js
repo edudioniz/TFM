@@ -31,7 +31,7 @@ function navigator_launch(ev){
     load_data(ev.target.getAttribute('data-route'));
 }
 function navigator_launch_with_trace(ev){
-    if(ev.target.getAttribute('data-index')!==null && ev.target.getAttribute('data-title')<nav_obj_hash.length-1){
+    /*if(ev.target.getAttribute('data-index')!==null && ev.target.getAttribute('data-title')<nav_obj_hash.length-1){
         console.log(JSON.stringify(nav_obj_hash))
         console.log(nav_obj_hash.length);
         console.log(ev.target.getAttribute('data-index'));
@@ -50,7 +50,8 @@ function navigator_launch_with_trace(ev){
             nav_obj_hash = [];
         }
         load_data(ev.target.getAttribute('data-route'));
-    }
+    }*/
+    load_data(ev.target.getAttribute('data-route'));
 }
 
 function set_navbar(jsondata){
@@ -75,20 +76,24 @@ function set_navbar(jsondata){
     });
 }
 function set_navbar_by_hash(jsondata){
-    $("#nav_list ol").append(
-        window["append_navbar_type_"+jsondata['origin']]()
-    );
+    
     
     if(nav_obj_hash.length > 0){
-        for (var i = 0; i < nav_obj_hash.length-1; i++){
-            $("#nav_list ol").append(
+        $("#nav_list ol").prepend(
+            append_navbar_route_last(nav_obj_hash[0]['title'])
+        );
+        
+        for (var i = 1; i < nav_obj_hash.length; i++){
+            $("#nav_list ol").prepend(
                 append_navbar_route(nav_obj_hash[i]['title'], nav_obj_hash[i]['route'], i+1)
             );
         }
-        $("#nav_list ol").append(
-            append_navbar_route_last(nav_obj_hash[nav_obj_hash.length-1]['title'])
-        );
+        
     }
+    $("#nav_list ol").prepend(
+        window["append_navbar_type_"+jsondata['origin']]()
+    );
+    
     $('.nav-btn').click('click', function (ev) {
         ev.preventDefault();
         navigator_launch_with_trace(ev);
@@ -293,7 +298,7 @@ function sign_file(route,id){
         
         var call = "";
         if(type_file_servlet==="hash"){
-            call = nav_obj_hash[nav_obj_hash.length-1]['route'];
+            call = nav_obj_hash[0]['route'];
         }else{
             call = route;
         }
