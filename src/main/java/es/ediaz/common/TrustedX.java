@@ -47,11 +47,11 @@ import org.mortbay.util.ajax.JSON;
 public class TrustedX{
     
     Properties p;
-    String routejks = "E:/clouddocstruststore.jks";
-    //String routejks = "/opt/clouddocstruststore.jks";
+    //String routejks = "E:/clouddocstruststore.jks";
+    String routejks = "/opt/clouddocstruststore.jks";
     String passjks = "123456";
-    String returnUrl = "http://localhost:8080/sign";
-    //String returnUrl = "https://uoc.safelayer.com:2080/sign";
+    //String returnUrl = "http://localhost:8080/sign";
+    String returnUrl = "https://uoc.safelayer.com:2080/sign";
     String baseUrl = "https://uoc.safelayer.com:8082";
     
     String url = "uoc.safelayer.com";

@@ -38,10 +38,10 @@ import org.json.JSONObject;
  * @author Eduardo
  */
 public class TrustedXSignature implements ExternalSignature {
-    private final static String ROUTE_TEMP="E:\\";
-    //private final static String ROUTE_TEMP="/tmp/";
-    private final static String JKS="E:\\clouddocstruststore.jks";
-    //private final static String JKS="/opt/clouddocstruststore.jks";
+    //private final static String ROUTE_TEMP="E:\\";
+    private final static String ROUTE_TEMP="/tmp/";
+    //private final static String JKS="E:\\clouddocstruststore.jks";
+    private final static String JKS="/opt/clouddocstruststore.jks";
     private final static String JKS_PASSWORD="123456";
     
     private String SIGN_ALG= "rsa-sha256";

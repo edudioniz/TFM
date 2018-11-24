@@ -51,15 +51,19 @@ import org.json.JSONObject;
  * @author Eduardo
  */
 public class Drive {
-    private final static String ROUTE_TEMP="E:\\";
+    //private final static String ROUTE_TEMP="E:\\";
+    private final static String ROUTE_TEMP="/tmp/";
     
     private final String client_id = "247410889511-svsohn3f0vucpjvrueesdvv4v6srhjnh.apps.googleusercontent.com";
     private final String client_secret = "gY17vKGtojlSPFyNMre7138j";
     
-    private final String routejks = "E:/google.jks";
+    //private final String routejks = "E:/google.jks";
+    private final String routejks = "/opt/google.jks";
     private final String passjks = "123456";
     
-    private final String callback = "http://localhost:8080/oauth?drive";
+    //private final String callback = "http://localhost:8080/oauth?drive";
+    private final String callback = "https://uoc.safelayer:2080/oauth?drive";
+    
     
     private CloseableHttpClient client;
     private String hash;
