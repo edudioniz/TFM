@@ -158,33 +158,31 @@ public class Drive {
                 fileparsed.put("route", file.get("id"));
                 fileparsed.put("title", file.get("title"));
                 fileparsed.put("type", file.get("type"));
-                /*if(file.get("mimeType").toString().endsWith("folder")){
-                    fileparsed.put("type", "folder");
-                }else{
-                    fileparsed.put("type", "file");
-                }*/
-                
-                /*JSONArray array = file.getJSONArray("parents");
-                
-                String routeStr = "";
-                String routeUrl = "";
-                for (Iterator<Object> par = array.iterator(); par.hasNext(); ) {
-                    JSONObject txt = (JSONObject) par.next();
-                    if(!txt.getBoolean("isRoot")){
-                        JSONObject detailParent = new JSONObject(this.details(token, txt.getString("id")));
-                        routeStr += "/"+detailParent.getJSONObject("data").getString("title");
-                        routeUrl += "/"+detailParent.getJSONObject("data").getString("id");
-                    }
-                }
-                fileparsed.put("routeStr", routeStr);
-                fileparsed.put("routeUrl", routeUrl);*/
                 
                 fileparsed.put("tmp", file.toString());
+                
                 filelist.put(fileparsed);
             }
             obj.put("data", filelist);
             obj.put("origin", "drive");
             obj.put("path", "");
+            
+            /*
+            devolver un parent compuesto por el objeto definido JS para interpretar la barra de navegacion
+            En el JS ante 
+            */
+            JSONArray arrayparents = new JSONArray();
+            JSONObject parent = new JSONObject();
+            parent.put("title", "chuchu");
+            parent.put("route", "0B3iVQORiDYBUWFN6QjdaSjRvQ3M");
+            arrayparents.put(parent);
+            
+            parent = new JSONObject();
+            parent.put("title", "tutu");
+            parent.put("route", "0B3iVQORiDYBUWFN6QjdaSjRvQ3M");
+            arrayparents.put(parent);
+            obj.put("parent", arrayparents);
+            
             if(response.getStatusLine().getStatusCode() == 200){
                 obj.put("ccd", "200");
                 obj.put("msj", "OK");
@@ -239,11 +237,6 @@ public class Drive {
             obj.put("ccd", "200");
             obj.put("msj", "OK");
             obj.put("url", filebrute.getJSONObject("data").getString("webContentLink"));
-            
-            //System.out.println("----");
-            //System.out.println(filebrute.getJSONObject("data").getString("webContentLink"));
-            //System.out.println("----");
-            
             return obj.toString();
         }else{
             JSONObject obj = new JSONObject();
@@ -287,9 +280,6 @@ public class Drive {
             parsedO.put("parents", rsp.get("parents"));
             if(rsp.has("thumbnailLink")){
                 parsedO.put("thumbnail", rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
-                //System.out.println("**********************");
-                //System.out.println(rsp.getString("thumbnailLink").split("=s")[0]+"=s1024");
-                //System.out.println("**********************");
             }
             obj.put("data", parsedO);
             if(response.getStatusLine().getStatusCode() == 200){
@@ -341,7 +331,7 @@ public class Drive {
         return obj.toString();
     }
 
-    public String upload(String token, String localurl, String fileid) throws FileNotFoundException, IOException {
+    public String upload(String token, String localurl, String fileid, String parent) throws FileNotFoundException, IOException {
         String jsonresponse = "";
         String url = "https://www.googleapis.com/upload/drive/v2/files?uploadType=media";
         CloseableHttpResponse response = null;
@@ -366,9 +356,11 @@ public class Drive {
                 
                 String data_upload = HTTPUtils.getStringFromStream(response.getEntity().getContent());
                 JSONObject json_upload = new JSONObject(data_upload);
-                
-                url = "https://www.googleapis.com/drive/v2/files/"+json_upload.getString("id");
-                //url = "https://www.googleapis.com/upload/drive/v2/files/"+json_upload.getString("id");
+                if(parent!=null){
+                    url = "https://www.googleapis.com/drive/v2/files/"+json_upload.getString("id")+"?addParents="+parent+"&removeParents=root";
+                }else{
+                    url = "https://www.googleapis.com/drive/v2/files/"+json_upload.getString("id");
+                }
                 HttpPut http = new HttpPut(url);
                 http.addHeader("Authorization","Bearer "+token);
                 http.addHeader("Content-Type","application/json");
@@ -378,6 +370,7 @@ public class Drive {
                 entity.append("originalFilename", filename);
                 entity.append("mimeType", type_content);
                 entity.append("fileExtension", filename.split("\\.")[0]);
+                
                 http.setEntity(new StringEntity(entity.toString()));
                 
                 response = this.client.execute(http);
@@ -386,8 +379,8 @@ public class Drive {
             }else{
                 throw new Exception("Error code upload: "+response.getStatusLine().getStatusCode());
             }
+            //System.out.println(jsonresponse);
             
-            System.out.println(jsonresponse);
         } catch (IOException ex) {
             Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {

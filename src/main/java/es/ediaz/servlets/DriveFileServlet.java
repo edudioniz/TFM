@@ -7,12 +7,14 @@ package es.ediaz.servlets;
 
 import es.ediaz.common.Drive;
 import java.io.IOException;
+import javax.json.JsonValue;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.json.JSONObject;
 
 /**
  *
@@ -36,6 +38,9 @@ public class DriveFileServlet extends HttpServlet {
             Drive drive = new Drive(tmp_hash.toString());
             if(action != null && action.length()>0 && action.equals("nav")){
                 jsonResp = drive.list(token, request.getParameter("path"));
+                if(new JSONObject(jsonResp).getString("ccd").equals("200")){
+                    request.getSession(false).setAttribute("parent",request.getParameter("path"));
+                }
             }else if(action != null && action.length()>0 && action.equals("download")){
                 jsonResp = drive.downloadFileUrl(token, request.getParameter("path"));
             }else if(action != null && action.length()>0 && action.equals("downloadToSign")){

@@ -8,6 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.json.JSONObject;
 
 @WebServlet(urlPatterns = {"/oauth"})
@@ -35,6 +36,13 @@ public class AuthServlet extends HttpServlet {
             }
         }else if(request.getParameter("dropbox")!=null){
             System.out.println("DROPBOX");
+        }else if(request.getParameter("disconnect")!=null){
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+
+            }
+            response.sendRedirect("index.jsp");
         }else{
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }

@@ -26,7 +26,7 @@
         <div class="nav-scroller bg-white shadow-sm">
             <nav class="nav nav-underline">
                 <a class="nav-link" href="nav.jsp">Documentos</a>
-                <a class="nav-link active" href="#">Mis firmas</a>
+                <a class="nav-link active" href="#">Identidades de firma</a>
             </nav>
         </div>
 

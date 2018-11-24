@@ -62,7 +62,7 @@ function set_navbar(jsondata){
     if(data.length > 1){
         for (var i = 1; i < data.length-1; i++){
             $("#nav_list ol").append(
-                append_navbar_route(data[i], compose_route(data))
+                append_navbar_route(data[i], compose_route(i, data))
             );
         }
         $("#nav_list ol").append(
@@ -94,9 +94,9 @@ function set_navbar_by_hash(jsondata){
         navigator_launch_with_trace(ev);
     });
 }
-function compose_route(data){
+function compose_route(index, data){
     str = "";
-    for (var i = 1; i < data.length-1; i++){
+    for (var i = 1; i <= index; i++){
         str +="/"+data[i];
     }
     return str;
@@ -199,6 +199,9 @@ function load_data(path, servlet=null, type=null){
         .done(function(data) {
             clear_navbar();
             if(type_file_servlet === "hash"){
+                if(JSON.parse(data)['parent']!==null && JSON.parse(data)['parent'].length > 0){
+                   nav_obj_hash = JSON.parse(data)['parent'];
+                }
                 set_navbar_by_hash(JSON.parse(data));
             }else{
                 set_navbar(JSON.parse(data));

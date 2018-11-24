@@ -90,8 +90,9 @@ public class SignServlet extends HttpServlet {
                         db.upload(localurl, callback+"/"+localurl.split("__")[1]);
                     }else if(request.getSession(false).getAttribute("store_servlet").equals("filedrive")){
                         String store_token = (String)request.getSession(false).getAttribute("token");
+                        String parent = (String)request.getSession(false).getAttribute("parent");
                         Drive drive = new Drive(tmp_hash.toString());
-                        drive.upload(store_token, localurl, fileid);
+                        drive.upload(store_token, localurl, fileid, parent);
                     }else{
                         throw new UnsupportedOperationException("Not supported this provider yet.");
                     }

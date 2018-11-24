@@ -1,4 +1,4 @@
 $('.disconnect-button').click(function(){
-    window.location.href = "disconnect";
+    window.location.href = "oauth?disconnect";
     return false;
 });
