@@ -62,7 +62,7 @@ public class Drive {
     private final String passjks = "123456";
     
     //private final String callback = "http://localhost:8080/oauth?drive";
-    private final String callback = "https://uoc.safelayer:2080/oauth?drive";
+    private final String callback = "https://uoc.safelayer.com:2080/oauth?drive";
     
     
     private CloseableHttpClient client;
