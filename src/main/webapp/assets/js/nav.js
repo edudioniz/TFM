@@ -4,6 +4,8 @@ var nav_bar;
 var file_servlet;
 var type_file_servlet;
 
+var nav_bar_rollback;
+
 //cert
 function force_sign(ev){
     ev.preventDefault();
@@ -131,6 +133,10 @@ function append_cer(id, title, route){
     str = '<tr><td class="cert-btn" data-id="'+id+'" data-title="'+title+'"><i class="fas fa-certificate text-danger"></i> '+title+'</td></tr>';
     return str;
 }
+function append_no_cer(){
+    str = '<tr><td>No dispone de identidades de firma</td></tr>';
+    return str;
+}
 function append_folder(id, title, route){
     str = '<tr><td class="folder-btn" data-id="'+id+'" data-title="'+title+'" data-route="'+route+'"><i class="far fa-folder"></i> '+title+'</td></tr>';
     return str;
@@ -147,10 +153,25 @@ function append_cert_select(id, title){
     str = '<option value="'+id+'">'+title+'</option>';
     return str;
 }
+function append_no_cert(){
+    str = '<option>No dispone de ninguna identidad de firma</option>';
+    return str;
+}
 function set_loader(){
     $("#nav_list ol").html(
         '<tr><td><i class="fas fa-sync fa-spin"></i> Cargando</td></tr>'
     );
+}
+function err_loader(){
+    $("#nav_list ol").html(
+        '<tr><td><i class="fas fa-sync fa-spin"></i> No se ha podido cargar la ruta</td></tr>'
+    );
+}
+function rollbackNavBar(){
+    $("#nav_list ol").html(nav_bar_rollback);
+}
+function backupNavBar(){
+    nav_bar_rollback = $("#nav_list ol").html();
 }
 
 function clear_list(){
@@ -199,27 +220,36 @@ function load_data(path, servlet=null, type=null){
     if(type !== null){
         type_file_servlet = type;
     }
+    
+    if(path === "/" || path === "route" || path === ""){
+        nav_obj_hash = [];
+    }
+    
+    backupNavBar();
     set_loader();
     $.ajax( file_servlet+"?a=nav&path="+path )
         .done(function(data) {
-            clear_navbar();
-            if(type_file_servlet === "hash"){
-                if(JSON.parse(data)['parent']!==null && JSON.parse(data)['parent'].length > 0){
-                   nav_obj_hash = JSON.parse(data)['parent'];
-                }
-                set_navbar_by_hash(JSON.parse(data));
+            if(JSON.parse(data)['ccd']==="405"){
+                rollbackNavBar();
+                alert("No se ha podido cargar la carpeta");
             }else{
-                set_navbar(JSON.parse(data));
+                clear_navbar();
+                if(type_file_servlet === "hash"){
+                    if(JSON.parse(data)['parent']!==null && JSON.parse(data)['parent'].length > 0){
+                       nav_obj_hash = JSON.parse(data)['parent'];
+                    }
+                    set_navbar_by_hash(JSON.parse(data));
+                }else{
+                    set_navbar(JSON.parse(data));
+                }
+
+                clear_list();
+                compose_list(JSON.parse(data));
             }
-            
-            clear_list();
-            compose_list(JSON.parse(data));
         })
         .fail(function(data) {
             if(data['status']==401){
                 window.location.href = "index.jsp";
-            }else{
-                alert( JSON.stringify(data));
             }
         })
         .always(function() {
@@ -239,10 +269,16 @@ function load_file(route, filename, id){
             $('#modal_pdf_download_btn').attr("data-route", route);
             $('#modal_pdf_download_btn').attr("data-filename", filename);
             
-            $('#modal_pdf_sign_btn').prop("disabled", false);
+            
             $('#modal_pdf_sign_btn').attr("data-id", id);
             $('#modal_pdf_sign_btn').attr("data-route", route);
             $('#modal_pdf_sign_btn').attr("data-filename", filename);
+            
+            var re = /(?:\.([^.]+))?$/;
+            var ext = re.exec(filename)[1];
+            if(ext === "pdf"){
+                $('#modal_pdf_sign_btn').prop("disabled", false);
+            }
             
             if(json['ccd'] == "210"){
                 modal.find("#viewer-details").removeClass("load-preview-thumbnail");
@@ -261,8 +297,6 @@ function load_file(route, filename, id){
         .fail(function(data) {
             if(data['status']==401){
                 window.location.href = "index.jsp";
-            }else{
-                alert( JSON.stringify(data));
             }
         })
         .always(function() {
@@ -284,8 +318,6 @@ function download_file(route){
         .fail(function(data) {
             if(data['status']==401){
                 window.location.href = "index.jsp";
-            }else{
-                alert( JSON.stringify(data));
             }
         })
         .always(function() {
@@ -293,6 +325,7 @@ function download_file(route){
         });
 }
 function sign_file(route,id){
+    $('#modal_pdf_ultimate_sign_btn').prop("disabled", true);
     $('#modal_pdf_ultimate_sign_btn').html('<i class="fas fa-sync fa-spin"></i> Firmando... ');
     download_to_sign(route, function(filename){
         
@@ -317,8 +350,6 @@ function sign_file(route,id){
             .fail(function(data) {
                 if(data['status']==401){
                     window.location.href = "index.jsp";
-                }else{
-                    alert( JSON.stringify(data));
                 }
             })
             .always(function() {
@@ -333,8 +364,13 @@ function list_cert(){
         .done(function(data) {
             var json = JSON.parse(data)
             if(json['ccd'] == "200"){
-                for(i=0;i<json['data'].length;i++){
-                    $("#modal_sign_cert").append(append_cert_select(json['data'][i]['id'], json['data'][i]['description']));
+                if(json['data'].length>0){
+                    for(i=0;i<json['data'].length;i++){
+                        $("#modal_sign_cert").append(append_cert_select(json['data'][i]['id'], json['data'][i]['description']));
+                    } 
+                    $('#modal_pdf_ultimate_sign_btn').prop("disabled", false);
+                }else{
+                   $("#modal_sign_cert").append(append_no_cert()); 
                 }
             }else if(json['ccd'] == "215"){
                 alert( "Error al recuperar los certificados" );
@@ -346,14 +382,10 @@ function list_cert(){
         .fail(function(data) {
             if(data['ccd']==401){
                 window.location.href = "index.jsp";
-            }else{
-                alert( JSON.stringify(data));
             }
         })
         .always(function() {
             //al cargar todos los archivos
-    
-            $('#modal_pdf_ultimate_sign_btn').prop("disabled", false);
         });
 }
 function download_to_sign(route, callback){
@@ -370,9 +402,6 @@ function download_to_sign(route, callback){
         .fail(function(data) {
             if(data['status']==401){
                 window.location.href = "index.jsp";
-            }else{
-                alert( JSON.stringify(data));
-                return;
             }
         });
 }

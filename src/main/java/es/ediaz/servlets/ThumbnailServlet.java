@@ -20,8 +20,8 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Eduardo
  */
-@WebServlet(name = "DropboxTempServlet", urlPatterns = {"/prefile"})
-public class DropboxTempServlet extends HttpServlet {
+@WebServlet(name = "ThumbnailServlet", urlPatterns = {"/prefile"})
+public class ThumbnailServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>

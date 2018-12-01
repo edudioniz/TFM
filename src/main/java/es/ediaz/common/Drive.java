@@ -11,21 +11,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.json.Json;
 import javax.net.ssl.SSLContext;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -33,11 +27,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -144,7 +135,8 @@ public class Drive {
         JSONObject rsp = null;
         try {
             HttpGet http = new HttpGet(url);
-            http.addHeader("Content-Type","application/json");
+            http.addHeader("Content-Type","application/json;charset=utf-8");
+            
             http.addHeader("Authorization","Bearer "+token);
 
             response = this.client.execute(http);
@@ -177,6 +169,12 @@ public class Drive {
             devolver un parent compuesto por el objeto definido JS para interpretar la barra de navegacion
             En el JS ante 
             */
+            
+            System.err.println("----listado----");
+            System.err.println(obj);
+            System.err.println(path);
+            System.err.println("--------------");
+            
             JSONArray arrayparents = new JSONArray();
             JSONObject parent;
             
@@ -184,31 +182,40 @@ public class Drive {
             String inv_path = path;
             
             do{
-                String folder = this.details(token, inv_path);
-                JSONArray aparents = new JSONObject(folder).getJSONObject("data").getJSONArray("parents");
-                if(!aparents.isEmpty()&& aparents.length()>0){
-                    if(aparents.getJSONObject(0).getBoolean("isRoot")){
-                        
-                        parent = new JSONObject();
-                        parent.put("title", new JSONObject(this.details(token, inv_path)).getJSONObject("data").getString("title"));
-                        parent.put("route", inv_path);
-                        arrayparents.put(parent);
-                        
-                        stop = true;
+                System.err.println("----detail----");
+                System.err.println(inv_path);
+                System.err.println("--------------");
+                if(!inv_path.equals("root")){
+                    String folder = this.details(token, inv_path);
+                    JSONArray aparents = new JSONObject(folder).getJSONObject("data").getJSONArray("parents");
+                    if(!aparents.isEmpty()&& aparents.length()>0){
+                        if(aparents.getJSONObject(0).getBoolean("isRoot")){
+
+                            parent = new JSONObject();
+                            parent.put("title", new JSONObject(this.details(token, inv_path)).getJSONObject("data").getString("title"));
+                            parent.put("route", inv_path);
+                            arrayparents.put(parent);
+
+                            stop = true;
+                        }else{
+                            parent = new JSONObject();
+                            parent.put("title", new JSONObject(this.details(token, inv_path)).getJSONObject("data").getString("title"));
+                            parent.put("route", inv_path);
+                            arrayparents.put(parent);
+
+                            inv_path = aparents.getJSONObject(0).getString("id");
+                            stop = false;
+                        }
+
                     }else{
-                        parent = new JSONObject();
-                        parent.put("title", new JSONObject(this.details(token, inv_path)).getJSONObject("data").getString("title"));
-                        parent.put("route", inv_path);
-                        arrayparents.put(parent);
-                        
-                        inv_path = aparents.getJSONObject(0).getString("id");
-                        stop = false;
+                        stop = true;
                     }
-                    
-                }else{
-                    stop = true;
                 }
             }while(!stop);
+            
+            System.err.println("----parents----");
+            System.err.println(arrayparents);
+            System.err.println("--------------");
             obj.put("parent", arrayparents);
             
             if(response.getStatusLine().getStatusCode() == 200){
@@ -290,6 +297,11 @@ public class Drive {
             JSONObject obj = new JSONObject();
             JSONObject rsp = new JSONObject(HTTPUtils.getStringFromStream(response.getEntity().getContent()));
             
+            System.err.println("-Details:drive-");
+            System.err.println(rsp);
+            System.err.println("---");
+            System.err.flush();
+            
             JSONObject parsedO = new JSONObject();
             parsedO.put("id", rsp.get("id"));
             parsedO.put("title", rsp.get("title"));
@@ -337,19 +349,26 @@ public class Drive {
                 http.addHeader("Content-Type","application/json");
                 response = this.client.execute(http);
                 
-                FileOutputStream outStream = new FileOutputStream(ROUTE_TEMP+hash+".png");
-                response.getEntity().writeTo(outStream);
-                outStream.flush();
-                outStream.close();
+                if(response.getStatusLine().getStatusCode()==200){
+                    FileOutputStream outStream = new FileOutputStream(ROUTE_TEMP+hash+".png");
+                    response.getEntity().writeTo(outStream);
+                    outStream.flush();
+                    outStream.close();
+                    obj.put("ccd", "210");
+                    obj.put("msj", "Thumbnail generated correctly");
+                    obj.put("status", "prefile");
+                    obj.put("type", "thumbnail");
+                }else{
+                    obj.put("ccd", "215");
+                    obj.put("msj", "NO THUMBNAIL");
+                    obj.put("status", "error");
+                    obj.put("type", "thumbnail");
+                }
                 
             } catch (IOException ex) {
                 Logger.getLogger(Drive.class.getName()).log(Level.SEVERE, null, ex);
             }
             
-            obj.put("ccd", "210");
-            obj.put("msj", "Thumbnail generated correctly");
-            obj.put("status", "prefile");
-            obj.put("type", "thumbnail");
         }else{
             obj.put("ccd", "215");
             obj.put("msj", "NO THUMBNAIL");

@@ -54,6 +54,9 @@ public class DriveFileServlet extends HttpServlet {
         }else{
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
+        System.out.println("respresp");
+        System.out.println(jsonResp);
+        System.out.println("respresp");
         response.getWriter().print(jsonResp);
         
     }

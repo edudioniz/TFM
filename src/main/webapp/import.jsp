@@ -34,7 +34,7 @@
             <div class="row">
                 <div class="col-md-9 offset-md-1 main">
                     <input id="inputfile" class="d-none" type=file accept=".p12"/>
-                    <p class="lead">Mis firmas <button type="button" id="add_sign" class="btn btn-success float-right"><i class="fas fa-plus"></i> Nueva firma PKCS#12</button></p>
+                    <p class="lead">Mis firmas <button type="button" id="add_sign" class="btn btn-success float-right"><i class="fas fa-plus"></i> Nueva identidad de firma</button></p>
                     <div class="table-responsive">
                         <table class="table table-hover  text-muted table-list-file" id="table_sign" ><tbody></tbody></table>
                     </div>

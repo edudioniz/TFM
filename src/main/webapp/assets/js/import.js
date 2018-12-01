@@ -6,19 +6,31 @@ function append_cer(id, title){
     str = '<tr><td class="folder-btn"><i class="fas fa-certificate text-danger"></i> '+title+'<i class="fas fa-trash-alt text-muted float-right delete_sign"  data-id="'+id+'"></i></td></tr>';
     return str;
 }
+
+function append_no_cer(){
+    str = '<tr><td class="folder-btn">No dispone de identidades de firma</td></tr>';
+    return str;
+}
 			
 function compose_list(jsondata){
-    for (var i = 0; i < jsondata['data'].length; i++){
-	$(".table-list-file tbody").append(
-            window["append_cer"](jsondata['data'][i]['id'], jsondata['data'][i]['description'])
-	);
+    if(jsondata['data'].length>0){
+        for (var i = 0; i < jsondata['data'].length; i++){
+            $(".table-list-file tbody").append(
+                window["append_cer"](jsondata['data'][i]['id'], jsondata['data'][i]['description'])
+            );
+        }
+        $('.delete-btn').click('click', function (ev) {
+            delete_launch(ev);
+        });
+        $('.cert-btn').click('click', function (ev) {
+            cert_launch(ev);
+        });
+    }else{
+        $(".table-list-file tbody").append(
+            window["append_no_cer"]()
+        );
     }
-    $('.delete-btn').click('click', function (ev) {
-        delete_launch(ev);
-    });
-    $('.cert-btn').click('click', function (ev) {
-        cert_launch(ev);
-    });
+    
 };
 
 function resetCertList(){

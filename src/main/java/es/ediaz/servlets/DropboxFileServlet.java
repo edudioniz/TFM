@@ -12,6 +12,7 @@ import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.DbxPathV2;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
+import com.dropbox.core.v2.files.GetMetadataErrorException;
 import com.dropbox.core.v2.files.Metadata;
 import com.dropbox.core.v2.files.ThumbnailErrorException;
 import com.dropbox.core.v2.files.ThumbnailFormat;
@@ -22,10 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -93,15 +92,19 @@ public class DropboxFileServlet extends HttpServlet {
             Metadata metadata = null;
             try {
                 metadata = client.files().getMetadata(path);
-            }catch (Exception ex) {
-                Logger.getLogger(DbxException.class.getName()).log(Level.SEVERE, null, ex);    
+                path = DbxPathV2.getParent(path) + "/" + metadata.getName();
+                if (metadata instanceof FolderMetadata) {
+                    jsonResp = listDirectory(client, path);
+                }else {
+                    jsonResp = detailsFile(client, path, (FileMetadata) metadata, tmp_hash);
+                }
+            }catch (GetMetadataErrorException ex) {
+                jsonResp = new JSONObject().put("ccd", "405").put("msj", "errorPath").toString();
+                
+            } catch (DbxException ex) {
+                Logger.getLogger(DropboxFileServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
-            path = DbxPathV2.getParent(path) + "/" + metadata.getName();
-            if (metadata instanceof FolderMetadata) {
-                jsonResp = listDirectory(client, path);
-            }else {
-                jsonResp = detailsFile(client, path, (FileMetadata) metadata, tmp_hash);
-            }
+            
         }
         return jsonResp;
     }
