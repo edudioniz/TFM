@@ -144,6 +144,9 @@ public class Drive {
             JSONObject obj = new JSONObject();
             rsp = new JSONObject(HTTPUtils.getStringFromStream(response.getEntity().getContent()));
             
+            System.out.println("****************** list file **************");
+            System.out.println(rsp.toString());
+            System.out.println("****************** end **************");
             JSONObject fileparsed;
             JSONArray filelist = new JSONArray();
             JSONArray list = rsp.getJSONArray("items");
@@ -379,6 +382,7 @@ public class Drive {
     }
 
     public String upload(String token, String localurl, String fileid, String parent) throws FileNotFoundException, IOException {
+        System.out.println("----UPLOAD FILE----");
         String jsonresponse = "";
         String url = "https://www.googleapis.com/upload/drive/v2/files?uploadType=media";
         CloseableHttpResponse response = null;
@@ -403,11 +407,16 @@ public class Drive {
                 
                 String data_upload = HTTPUtils.getStringFromStream(response.getEntity().getContent());
                 JSONObject json_upload = new JSONObject(data_upload);
-                if(parent!=null){
+                if(parent==null){
+                    parent = "";
+                }
+                
+                if(!parent.equals("")){
                     url = "https://www.googleapis.com/drive/v2/files/"+json_upload.getString("id")+"?addParents="+parent+"&removeParents=root";
                 }else{
                     url = "https://www.googleapis.com/drive/v2/files/"+json_upload.getString("id");
                 }
+                System.out.println(url);
                 HttpPut http = new HttpPut(url);
                 http.addHeader("Authorization","Bearer "+token);
                 http.addHeader("Content-Type","application/json");
@@ -418,11 +427,20 @@ public class Drive {
                 entity.append("mimeType", type_content);
                 entity.append("fileExtension", filename.split("\\.")[0]);
                 
+                System.out.println(filename);
+                System.out.println(filename);
+                System.out.println(type_content);
+                System.out.println(filename.split("\\.")[0]);
+                
                 http.setEntity(new StringEntity(entity.toString()));
                 
                 response = this.client.execute(http);
                 
                 jsonresponse = HTTPUtils.getStringFromStream(response.getEntity().getContent());
+                
+                System.out.println("---RESPONSE---");
+                System.out.println(jsonresponse);
+                System.out.println("---FIN---");
             }else{
                 throw new Exception("Error code upload: "+response.getStatusLine().getStatusCode());
             }

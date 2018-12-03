@@ -331,7 +331,11 @@ function sign_file(route,id){
         
         var call = "";
         if(type_file_servlet==="hash"){
-            call = nav_obj_hash[0]['route'];
+            if(nav_obj_hash.length===0){
+                call = "root";
+            }else{
+                call = nav_obj_hash[0]['route'];
+            }
         }else{
             call = route;
         }
