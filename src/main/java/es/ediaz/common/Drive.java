@@ -81,7 +81,7 @@ public class Drive {
     }
     
     public String getURLCode(){
-        String url = "https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/drive.file&access_type=online&include_granted_scopes=true&state=state_parameter_passthrough_value&redirect_uri="+callback+"&response_type=code&client_id="+client_id;
+        String url = "https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/drive&access_type=online&include_granted_scopes=true&state=state_parameter_passthrough_value&redirect_uri="+callback+"&response_type=code&client_id="+client_id;
         return url;
     }
     public String getToken(String code){
